@@ -1,0 +1,11 @@
+source,signal_date,stage,metric,value,unit,source_url,notes
+TXElectionResults,2026-03-03,primary,gop_ballots,2166910.0,votes,https://txelectionresults.com/primaries/2026,"Combined primary result site, 254/254 counties."
+TXElectionResults,2026-03-03,primary,dem_ballots,2319187.0,votes,https://txelectionresults.com/primaries/2026,"Combined primary result site, 254/254 counties."
+TXElectionResults,2026-03-03,primary,total_ballots,4486097.0,votes,https://txelectionresults.com/primaries/2026,"Combined primary result site, 254/254 counties."
+TexPolls/TX SOS,2026-03-03,primary,gop_early_vote,1081878.0,votes,https://texpolls.com/,Final primary turnout estimate from SOS-linked TexPolls dashboard.
+TexPolls/TX SOS,2026-03-03,primary,gop_election_day_vote,1071472.0,votes,https://texpolls.com/,"Derived from GOP final 2,153,350 minus early 1,081,878 on TexPolls turnout table."
+TexPolls/TX SOS,2026-03-03,primary,dem_early_vote,1214638.0,votes,https://texpolls.com/,Final primary turnout estimate from SOS-linked TexPolls dashboard.
+TexPolls/TX SOS,2026-03-03,primary,dem_election_day_vote,983259.0,votes,https://texpolls.com/,"Derived from Dem final 2,197,897 minus early 1,214,638 on TexPolls turnout table."
+Lines prediction market,2026-04-18,runoff,turnout_0_6m_to_0_9m_probability,58.0,percent,https://www.lines.com/prediction-markets/elections/turnout-in-texas-senate-republican-primary-runoff,Market-implied modal lower-turnout bin.
+Polymarket,2026-04-27,runoff,turnout_0_9m_to_1_2m_probability,15.5,percent,https://polymarket.com/event/turnout-in-texas-senate-republican-primary-runoff/will-turnout-in-the-texas-republican-senate-primary-runoff-be-between-1800000-and-2100000-voters,Search-result snapshot referenced lower bins; market is thin/contextual.
+Polymarket,2026-04-27,runoff,total_turnout_market_volume,43600.0,usd,https://polymarket.com/event/turnout-in-texas-senate-republican-primary-runoff/will-turnout-in-the-texas-republican-senate-primary-runoff-be-between-1800000-and-2100000-voters,Turnout market liquidity signal.

@@ -1,0 +1,35 @@
+{
+  "headline": {
+    "as_of": "2026-05-03",
+    "paxton_fair_probability": 0.60163,
+    "cornyn_fair_probability": 0.39837,
+    "mean_paxton_margin_points": 2.2008022687773354,
+    "margin_80pct_interval": [
+      -8.64054618532317,
+      13.034008942276266
+    ]
+  },
+  "diagnostics": {
+    "as_of": "2026-05-03",
+    "weighted_poll_margin_points": 4.914424304617393,
+    "weighted_poll_dispersion_points": 5.482507635623156,
+    "primary_transfer_prior_margin_points": 1.0807571632573456,
+    "top_two_primary_margin_points": -1.4661681039109737,
+    "hunt_paxton_explicit_pct": 46.98157968364449,
+    "hunt_cornyn_explicit_pct": 32.080950657964856,
+    "hunt_undecided_other_pct": 21.47480444321815,
+    "hunt_explicit_two_candidate_paxton_share": 0.5941740932319709,
+    "hunt_unresolved_to_paxton_assumption": 0.55,
+    "hunt_final_paxton_transfer_share": 0.5847849682234378,
+    "hunt_final_cornyn_transfer_share": 0.41521503177656216,
+    "avg_paxton_minus_cornyn_net_favorability": 18.75,
+    "avg_paxton_minus_cornyn_commitment_metric": 7.75,
+    "candidate_strength_margin_adjustment": 0.50625,
+    "cornyn_cash_m": 13.049999999999999,
+    "paxton_cash_m": 3.6,
+    "cash_ratio_cornyn_to_paxton": 3.454545454545454,
+    "cornyn_runoff_air_m": 3.395,
+    "paxton_runoff_air_m": 0.022,
+    "money_media_margin_adjustment": -1.8917527095424123
+  }
+}

@@ -1,0 +1,6 @@
+scenario,paxton_win_probability,cornyn_win_probability,mean_paxton_margin_points,margin_80pct_low,margin_80pct_high,sigma_margin_points,note
+polling_only,0.70856,0.29144000000000003,4.914424304617393,-6.596491707002988,16.51250563023043,8.982507635623156,Only post-primary direct runoff polls.
+polling_plus_primary,0.685315,0.314685,4.071017533518183,-6.7549125679264135,14.940486879393244,8.482507635623156,Runoff polls blended with first-round result plus Hunt transfer evidence.
+full_model_mid_turnout,0.60163,0.39837,2.2008022687773354,-8.64054618532317,13.034008942276266,8.482507635623156,"Core estimate: polls, primary prior, Paxton enthusiasm, and Cornyn money/media edge."
+low_turnout,0.647185,0.352815,3.4508022687773354,-8.368257534523991,15.219773846947668,9.232507635623156,Lower-turnout runoff scenario; assumes more ideologically intense electorate.
+high_turnout,0.539,0.46099999999999997,0.9508022687773354,-10.924841090377956,12.77868021803899,9.232507635623156,Higher-turnout runoff scenario; assumes Cornyn reaches more infrequent/moderate GOP voters.
