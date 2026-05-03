@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import pandas as pd
 
 from scripts.build_dataset import main
 
 
-ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
 
@@ -138,3 +142,9 @@ def test_market_and_wager_outputs_are_normalized() -> None:
     assert set(value["value_flag"]).issubset({"paxton_value", "cornyn_value", "no_bet_zone"})
     assert (value["required_edge"] > 0).all()
     assert (value["capped_exposure_fraction"] <= 0.05).all()
+
+
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__]))
