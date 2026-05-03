@@ -1,0 +1,2 @@
+election_date,report_date,county,party,early_in_person_votes,mail_votes,total_early_votes,source_url,notes,data_status,last_updated
+2026-05-26,2026-05-03,statewide,Republican,,,,https://www.sos.state.tx.us/elections/,Early voting has not started; update daily once runoff early vote reports begin.,not_started_or_missing,2026-05-03

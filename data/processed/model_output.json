@@ -30,6 +30,9 @@
     "cash_ratio_cornyn_to_paxton": 3.454545454545454,
     "cornyn_runoff_air_m": 3.395,
     "paxton_runoff_air_m": 0.022,
-    "money_media_margin_adjustment": -1.8917527095424123
+    "money_media_margin_adjustment": -1.8917527095424123,
+    "poll_effective_count": 6.561119963163091,
+    "poll_weighted_standard_error": 2.1403769038012985,
+    "county_detail_available": false
   }
 }

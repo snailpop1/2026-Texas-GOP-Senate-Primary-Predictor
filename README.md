@@ -24,6 +24,7 @@ The model mean is Paxton +2.2 points, with an intentionally wide 80% interval fr
 - Source reconciliation against reported primary results.
 - Sensitivity testing across pollsters and partisan/internal polls.
 - Clear separation between model estimates and market prices.
+- Wager-risk tooling with no-bet thresholds, market-friction buffers, shock tests, and capped stake-sizing math.
 - Reproducible analysis suitable for review in a notebook or command line.
 
 ## Repository Structure
@@ -38,6 +39,8 @@ scripts/
   build_dataset.py     Validation, normalization, model, and output pipeline
 tests/
   test_dataset.py      Reproducibility and schema checks
+docs/
+  pre_election_checklist.md
 ```
 
 ## Quick Start
@@ -71,7 +74,9 @@ As of May 3, 2026:
 - Core runoff polls include TPOR, PPP, Change Research, Impact Research, Quantus, GQR, Peak Insights, co/efficient, and April TPOR.
 - Expanded signals include McLaughlin second-choice data, Change Research crosstabs, TPOR Hunt-voter transfer, UH/TSU subgroup rows, turnout-market ranges, and general-election/electability polling.
 - Market comparison includes Kalshi, Polymarket, TexPolls, and Covers/Kalshi snapshots.
+- Market time series includes timestamp, bid/ask/last where available, normalized implied probabilities, fees, settlement notes, and liquidity/volume fields.
 - Money/media inputs include FEC-style campaign finance reporting from Texas Tribune plus AdImpact ad-spending reporting.
+- County and early-vote modules are now wired into the pipeline. The county file currently reconciles to statewide primary totals through a `statewide_unallocated` placeholder until full official county rows are imported.
 
 ## Model Summary
 
@@ -84,6 +89,24 @@ The model is intentionally transparent rather than black-box:
 - Candidate-strength adjustment: small capped Paxton boost from favorability, retention, and supporter commitment signals.
 - Money/media adjustment: capped Cornyn boost for cash and ad-spending advantage.
 - Market comparison: prediction markets are excluded from the core model and used only as an external price check.
+- Wager decision layer: flags value only when model edge clears configurable spread, fee, and uncertainty buffers. Fractional Kelly and flat bankroll settings are included as research math, not as a recommendation.
+- Shock model: stress-tests late Trump endorsement, Hunt endorsement, major new poll, and campaign/legal-event variance.
+
+## Wager-Readiness Layer
+
+The project now produces additional outputs for disciplined price comparison:
+
+| Output | Purpose |
+| --- | --- |
+| `data/processed/poll_diagnostics.csv` | Effective poll count, weighted standard error, MoE-derived uncertainty, partisan/nonpartisan splits. |
+| `data/processed/margin_distribution.csv` | Monte Carlo margin distribution by scenario. |
+| `data/processed/shock_model.csv` | Stress-test probabilities under late endorsement, poll, or campaign-event shocks. |
+| `data/processed/market_timeseries.csv` | Normalized market snapshots with settlement and fee assumptions. |
+| `data/processed/wager_value_table.csv` | No-bet/value flags after edge buffers, fees, spread assumptions, and capped exposure. |
+| `data/processed/county_turnout_model.csv` | County-turnout framework using primary totals, Hunt transfer, and low/mid/high retention assumptions. |
+| `data/processed/early_vote_turnout.csv` | Daily early-vote table ready for May 18-22 county updates. |
+
+Current limitation: the county turnout framework is structurally ready, but it is not yet a true county-by-county projection because the raw county candidate rows have not been imported. Until `data/raw/county_primary_results.csv` is replaced with official county rows, county output should be treated as a scaffold and validation target, not a local geographic signal.
 
 ## Current Scenario Output
 
@@ -133,6 +156,8 @@ When a new poll or market snapshot appears:
 5. Reopen or rerun the notebook.
 
 If President Trump endorses either candidate, add it to `data/raw/endorsements_events.csv`; do not change the quantitative model until there is evidence from polling or observed market movement.
+
+For the full daily workflow, see `docs/pre_election_checklist.md`.
 
 ## License And Data Attribution
 

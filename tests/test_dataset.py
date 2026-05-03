@@ -51,6 +51,22 @@ def test_primary_results_reconcile_to_source_totals() -> None:
     assert statewide["pct"].sum() < 100.5
 
 
+def test_county_primary_placeholder_reconciles_to_statewide_totals() -> None:
+    primary = pd.read_csv(RAW_DIR / "primary_results.csv")
+    county = pd.read_csv(RAW_DIR / "county_primary_results.csv")
+    statewide = primary[primary["statewide_or_county"] == "statewide"]
+    votes = dict(zip(statewide["candidate"], statewide["votes"]))
+    minor_total = statewide.loc[
+        ~statewide["candidate"].isin(["John Cornyn", "Ken Paxton", "Wesley Hunt"]), "votes"
+    ].sum()
+    county_votes = county.groupby("candidate")["votes"].sum()
+
+    assert county_votes["John Cornyn"] == votes["John Cornyn"]
+    assert county_votes["Ken Paxton"] == votes["Ken Paxton"]
+    assert county_votes["Wesley Hunt"] == votes["Wesley Hunt"]
+    assert county_votes["Minor candidates"] == minor_total
+
+
 def test_pipeline_outputs_valid_probabilities() -> None:
     result = main()
     scenarios = result["scenarios"]
@@ -69,13 +85,25 @@ def test_required_processed_outputs_exist() -> None:
         "primary_results.csv",
         "finance_ads.csv",
         "markets.csv",
+        "market_timeseries.csv",
+        "wager_settings.csv",
         "hunt_transfer.csv",
         "subgroup_signals.csv",
         "candidate_strength.csv",
         "turnout_signals.csv",
         "general_election_polls.csv",
+        "shock_scenarios.csv",
+        "county_primary_results.csv",
+        "county_features.csv",
+        "early_vote_turnout.csv",
         "model_scenarios.csv",
         "market_comparison.csv",
+        "wager_value_table.csv",
+        "poll_diagnostics.csv",
+        "margin_distribution.csv",
+        "shock_model.csv",
+        "county_turnout_model.csv",
+        "county_model_status.csv",
         "sensitivity.csv",
         "model_output.json",
     ]
@@ -89,3 +117,24 @@ def test_required_processed_outputs_exist() -> None:
     assert headline["as_of"] == "2026-05-03"
     assert 0 <= headline["paxton_fair_probability"] <= 1
     assert 0 <= headline["cornyn_fair_probability"] <= 1
+
+
+def test_processed_csvs_include_last_updated() -> None:
+    result = main()
+    assert "wager_value_table" in result
+    for path in PROCESSED_DIR.glob("*.csv"):
+        frame = pd.read_csv(path)
+        assert "last_updated" in frame.columns, f"{path.name} is missing last_updated"
+        assert set(frame["last_updated"].dropna()) == {"2026-05-03"}
+
+
+def test_market_and_wager_outputs_are_normalized() -> None:
+    main()
+    markets = pd.read_csv(PROCESSED_DIR / "market_timeseries.csv")
+    total = markets["normalized_paxton_prob"] + markets["normalized_cornyn_prob"] + markets["normalized_other_prob"]
+    assert total.between(0.999, 1.001).all()
+
+    value = pd.read_csv(PROCESSED_DIR / "wager_value_table.csv")
+    assert set(value["value_flag"]).issubset({"paxton_value", "cornyn_value", "no_bet_zone"})
+    assert (value["required_edge"] > 0).all()
+    assert (value["capped_exposure_fraction"] <= 0.05).all()

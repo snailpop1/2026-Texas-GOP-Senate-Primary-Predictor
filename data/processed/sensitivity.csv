@@ -1,10 +1,10 @@
-removed_pollster,paxton_win_probability,mean_paxton_margin_points
-Change Research,0.60176,2.2602244148780852
-GQR,0.59992,2.169349018509815
-Impact Research,0.58415,1.6228571004457497
-Peak Insights,0.63237,2.8090714392641956
-Public Policy Polling,0.60203,2.266108808463628
-Quantus Insights,0.58052,1.799507337483282
-Texas Public Opinion Research,0.549875,1.1051864822496489
-co/efficient,0.677635,3.627367762212525
-all partisan/internal core polls,0.611925,2.1485678188693265
+removed_pollster,paxton_win_probability,mean_paxton_margin_points,last_updated
+Change Research,0.60176,2.2602244148780852,2026-05-03
+GQR,0.59992,2.169349018509815,2026-05-03
+Impact Research,0.58415,1.6228571004457497,2026-05-03
+Peak Insights,0.63237,2.8090714392641956,2026-05-03
+Public Policy Polling,0.60203,2.266108808463628,2026-05-03
+Quantus Insights,0.58052,1.799507337483282,2026-05-03
+Texas Public Opinion Research,0.549875,1.1051864822496489,2026-05-03
+co/efficient,0.677635,3.627367762212525,2026-05-03
+all partisan/internal core polls,0.611925,2.1485678188693265,2026-05-03

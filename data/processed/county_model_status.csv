@@ -1,0 +1,2 @@
+county_detail_available,county_rows_with_candidate_votes,candidate_vote_coverage_pct,current_limitation,next_refresh_priority,last_updated
+False,0,1.0,Only statewide candidate totals are loaded in county_primary_results.csv. Import county-by-county official/SOS rows before treating this as a true county model.,Replace statewide_unallocated with full county rows and add daily early vote once available.,2026-05-03

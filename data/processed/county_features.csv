@@ -1,0 +1,19 @@
+county,county_type,region_group,metro_area,priority,source_url,notes,last_updated
+statewide_unallocated,statewide,statewide,statewide,1,https://www.sos.state.tx.us/elections/,Placeholder row used until county-level candidate results are imported.,2026-05-03
+Harris,urban,Houston,Houston,1,https://www.sos.state.tx.us/elections/,High-priority county for runoff retention and early-vote comparison.,2026-05-03
+Dallas,urban,DFW,Dallas-Fort Worth,1,https://www.sos.state.tx.us/elections/,High-priority county for runoff retention and early-vote comparison.,2026-05-03
+Tarrant,suburban,DFW,Dallas-Fort Worth,1,https://www.sos.state.tx.us/elections/,High-priority county for runoff retention and early-vote comparison.,2026-05-03
+Bexar,urban,Austin/San Antonio,San Antonio,1,https://www.sos.state.tx.us/elections/,High-priority county for runoff retention and early-vote comparison.,2026-05-03
+Travis,urban,Austin/San Antonio,Austin,1,https://www.sos.state.tx.us/elections/,High-priority county for runoff retention and early-vote comparison.,2026-05-03
+Collin,suburban,DFW,Dallas-Fort Worth,1,https://www.sos.state.tx.us/elections/,Fast-growth suburban GOP county.,2026-05-03
+Denton,suburban,DFW,Dallas-Fort Worth,1,https://www.sos.state.tx.us/elections/,Fast-growth suburban GOP county.,2026-05-03
+Fort Bend,suburban,Houston,Houston,1,https://www.sos.state.tx.us/elections/,Houston-area suburban county.,2026-05-03
+Montgomery,suburban,Houston,Houston,1,https://www.sos.state.tx.us/elections/,High-propensity Republican county in the Houston media market.,2026-05-03
+Hidalgo,border,Border,Rio Grande Valley,1,https://www.sos.state.tx.us/elections/,Border county for regional turnout checks.,2026-05-03
+El Paso,border,Border,El Paso,1,https://www.sos.state.tx.us/elections/,Border/West Texas county for regional turnout checks.,2026-05-03
+Lubbock,urban,West Texas,Lubbock,2,https://www.sos.state.tx.us/elections/,West Texas anchor county.,2026-05-03
+Smith,rural,East Texas,Tyler,2,https://www.sos.state.tx.us/elections/,East Texas GOP county.,2026-05-03
+Midland,urban,West Texas,Midland-Odessa,2,https://www.sos.state.tx.us/elections/,West Texas energy-region county.,2026-05-03
+Ector,urban,West Texas,Midland-Odessa,2,https://www.sos.state.tx.us/elections/,West Texas energy-region county.,2026-05-03
+Nueces,urban,Border,Corpus Christi,2,https://www.sos.state.tx.us/elections/,Coastal South Texas county.,2026-05-03
+Brazoria,suburban,Houston,Houston,2,https://www.sos.state.tx.us/elections/,Houston-area suburban county.,2026-05-03

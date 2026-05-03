@@ -1,0 +1,8 @@
+shock,paxton_margin_adjustment,sigma_adjustment,probability_note,source_url,notes
+trump_endorses_paxton,4.0,1.0,Stress test only; no probability assigned.,https://www.texastribune.org/,"Late endorsement shock that could consolidate pro-Paxton voters."
+trump_endorses_cornyn,-4.0,1.0,Stress test only; no probability assigned.,https://www.texastribune.org/,"Late endorsement shock that could consolidate pro-Cornyn institutional support."
+hunt_endorses_paxton,1.0,0.5,Stress test only; no probability assigned.,https://www.texastribune.org/,"Hunt-voter transfer shock toward Paxton."
+hunt_endorses_cornyn,-1.0,0.5,Stress test only; no probability assigned.,https://www.texastribune.org/,"Hunt-voter transfer shock toward Cornyn."
+major_new_poll_paxton_plus_10,2.0,1.0,Stress test only; no probability assigned.,https://www.realclearpolling.com/,"Major public poll shock favoring Paxton."
+major_new_poll_cornyn_plus_5,-2.0,1.0,Stress test only; no probability assigned.,https://www.realclearpolling.com/,"Major public poll shock favoring Cornyn."
+major_legal_or_campaign_event,0.0,2.0,Stress test only; no probability assigned.,https://www.texastribune.org/,"Variance shock for a material campaign or legal event."

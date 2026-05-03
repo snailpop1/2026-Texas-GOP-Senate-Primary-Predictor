@@ -1,0 +1,10 @@
+diagnostic,value,notes,last_updated
+core_poll_count,9.0,Direct runoff polls included in the core polling baseline.,2026-05-03
+effective_poll_count,6.561119963163091,"Weight-adjusted poll count after recency, sample, population, and partisan penalties.",2026-05-03
+weighted_mean_paxton_margin,4.914424304617393,Two-candidate Paxton margin in points.,2026-05-03
+weighted_poll_standard_deviation,5.482507635623156,Weighted spread of core poll margins.,2026-05-03
+weighted_standard_error,2.1403769038012985,Polling-only standard error using effective poll count.,2026-05-03
+moe_derived_standard_error,0.8948163634027609,Approximate margin uncertainty derived from reported poll MoE.,2026-05-03
+partisan_internal_weighted_mean_margin,5.144812048789997,Core polling margin using only partisan/internal polls.,2026-05-03
+nonpartisan_weighted_mean_margin,4.841876457522936,Core polling margin excluding partisan/internal polls.,2026-05-03
+latest_core_poll_release_date,,2026-04-17,2026-05-03
