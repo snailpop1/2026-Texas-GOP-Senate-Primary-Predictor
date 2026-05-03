@@ -58,6 +58,7 @@ def test_primary_results_reconcile_to_source_totals() -> None:
 def test_county_primary_placeholder_reconciles_to_statewide_totals() -> None:
     primary = pd.read_csv(RAW_DIR / "primary_results.csv")
     county = pd.read_csv(RAW_DIR / "county_primary_results.csv")
+    features = pd.read_csv(RAW_DIR / "county_features.csv")
     statewide = primary[primary["statewide_or_county"] == "statewide"]
     votes = dict(zip(statewide["candidate"], statewide["votes"]))
     minor_total = statewide.loc[
@@ -65,6 +66,8 @@ def test_county_primary_placeholder_reconciles_to_statewide_totals() -> None:
     ].sum()
     county_votes = county.groupby("candidate")["votes"].sum()
 
+    assert len(features) == 254
+    assert features["county"].nunique() == 254
     assert county_votes["John Cornyn"] == votes["John Cornyn"]
     assert county_votes["Ken Paxton"] == votes["Ken Paxton"]
     assert county_votes["Wesley Hunt"] == votes["Wesley Hunt"]
@@ -76,11 +79,17 @@ def test_pipeline_outputs_valid_probabilities() -> None:
     scenarios = result["scenarios"]
     full = scenarios[scenarios["scenario"] == "full_model_mid_turnout"].iloc[0]
 
-    assert len(scenarios) == 5
+    assert len(scenarios) == 6
     assert 0 <= full["paxton_win_probability"] <= 1
     assert 0 <= full["cornyn_win_probability"] <= 1
     assert abs(full["paxton_win_probability"] + full["cornyn_win_probability"] - 1) < 1e-9
     assert full["margin_80pct_low"] < full["mean_paxton_margin_points"] < full["margin_80pct_high"]
+    assert (
+        scenarios["paxton_win_probability"] + scenarios["cornyn_win_probability"]
+    ).sub(1).abs().lt(1e-9).all()
+
+    repeat = scenarios[scenarios["scenario"] == "repeat_primary_poll_error"].iloc[0]
+    assert repeat["mean_paxton_margin_points"] < full["mean_paxton_margin_points"]
 
 
 def test_required_processed_outputs_exist() -> None:
@@ -104,10 +113,13 @@ def test_required_processed_outputs_exist() -> None:
         "market_comparison.csv",
         "wager_value_table.csv",
         "poll_diagnostics.csv",
+        "poll_miss_diagnostics.csv",
         "margin_distribution.csv",
         "shock_model.csv",
         "county_turnout_model.csv",
         "county_model_status.csv",
+        "runoff_county_projection.csv",
+        "data_quality_report.csv",
         "sensitivity.csv",
         "model_output.json",
     ]
@@ -137,11 +149,54 @@ def test_market_and_wager_outputs_are_normalized() -> None:
     markets = pd.read_csv(PROCESSED_DIR / "market_timeseries.csv")
     total = markets["normalized_paxton_prob"] + markets["normalized_cornyn_prob"] + markets["normalized_other_prob"]
     assert total.between(0.999, 1.001).all()
+    assert {"stale_price_flag", "liquidity_warning", "settlement_warning"}.issubset(markets.columns)
 
     value = pd.read_csv(PROCESSED_DIR / "wager_value_table.csv")
     assert set(value["value_flag"]).issubset({"paxton_value", "cornyn_value", "no_bet_zone"})
     assert (value["required_edge"] > 0).all()
     assert (value["capped_exposure_fraction"] <= 0.05).all()
+    assert {"stale_price_flag", "liquidity_warning", "settlement_warning"}.issubset(value.columns)
+
+
+def test_source_metadata_and_quality_outputs() -> None:
+    main()
+    for path in RAW_DIR.glob("*.csv"):
+        frame = pd.read_csv(path)
+        if path.name == "wager_settings.csv":
+            continue
+        assert "source_url" in frame.columns, f"{path.name} is missing source_url"
+        assert frame["source_url"].fillna("").astype(str).str.strip().ne("").all()
+        note_column = "notes" if "notes" in frame.columns else "model_note" if "model_note" in frame.columns else None
+        assert note_column is not None, f"{path.name} is missing notes/model_note"
+        assert frame[note_column].fillna("").astype(str).str.strip().ne("").all()
+
+    quality = pd.read_csv(PROCESSED_DIR / "data_quality_report.csv")
+    assert {
+        "polls",
+        "county_results",
+        "early_vote",
+        "market_prices",
+        "finance_ads",
+        "endorsements_events",
+        "turnout_signals",
+        "poll_miss",
+    }.issubset(set(quality["signal_group"]))
+    assert (quality["missing_source_count"] == 0).all()
+
+
+def test_poll_miss_and_early_vote_layers_are_explicit() -> None:
+    main()
+    poll_miss = pd.read_csv(PROCESSED_DIR / "poll_miss_diagnostics.csv")
+    assert poll_miss["cornyn_poll_error_points"].iloc[0] > 0
+    assert poll_miss["repeat_miss_paxton_margin_adjustment"].iloc[0] < 0
+
+    early_vote = pd.read_csv(PROCESSED_DIR / "early_vote_turnout.csv")
+    assert set(early_vote["data_status"]) == {"not_started"}
+    assert not early_vote["available_for_model"].any()
+
+    projection = pd.read_csv(PROCESSED_DIR / "runoff_county_projection.csv")
+    assert set(projection["scenario"]) == {"low", "mid", "high"}
+    assert not projection["early_vote_available"].any()
 
 
 if __name__ == "__main__":

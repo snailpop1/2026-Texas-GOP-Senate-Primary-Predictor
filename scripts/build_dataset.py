@@ -14,6 +14,9 @@ ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
 AS_OF = pd.Timestamp("2026-05-03")
+RUNOFF_ELECTION_DATE = pd.Timestamp("2026-05-26")
+EARLY_VOTE_START = pd.Timestamp("2026-05-18")
+STALE_MARKET_DAYS = 2
 RNG_SEED = 20260503
 
 
@@ -42,6 +45,40 @@ def require_columns(frame: pd.DataFrame, columns: Iterable[str], name: str) -> N
     missing = [column for column in columns if column not in frame.columns]
     if missing:
         raise ValueError(f"{name} is missing columns: {missing}")
+
+
+def validate_source_metadata(raw: Dict[str, pd.DataFrame]) -> None:
+    required_sources = [
+        "polls",
+        "primary_results",
+        "markets",
+        "finance_ads",
+        "endorsements_events",
+        "hunt_transfer",
+        "subgroup_signals",
+        "candidate_strength",
+        "turnout_signals",
+        "general_election_polls",
+        "market_timeseries",
+        "shock_scenarios",
+        "county_primary_results",
+        "county_features",
+        "early_vote_turnout",
+    ]
+    for name in required_sources:
+        frame = raw[name]
+        if "source_url" not in frame.columns:
+            raise ValueError(f"{name} is missing source_url")
+        source_missing = frame["source_url"].fillna("").astype(str).str.strip().eq("")
+        if source_missing.any():
+            raise AssertionError(f"{name} has {int(source_missing.sum())} rows missing source_url")
+
+        note_column = "notes" if "notes" in frame.columns else "model_note" if "model_note" in frame.columns else None
+        if note_column is None:
+            raise ValueError(f"{name} is missing notes or model_note")
+        notes_missing = frame[note_column].fillna("").astype(str).str.strip().eq("")
+        if notes_missing.any():
+            raise AssertionError(f"{name} has {int(notes_missing.sum())} rows missing {note_column}")
 
 
 def validate_primary_results(primary: pd.DataFrame) -> None:
@@ -185,6 +222,8 @@ def process_market_timeseries(market_timeseries: pd.DataFrame) -> pd.DataFrame:
         "cornyn_implied_prob",
         "other_implied_prob",
         "fee_assumption_pct",
+        "volume",
+        "liquidity",
     ]
     for column in numeric_columns:
         out[column] = pd.to_numeric(out[column], errors="coerce")
@@ -205,6 +244,24 @@ def process_market_timeseries(market_timeseries: pd.DataFrame) -> pd.DataFrame:
     out["normalized_paxton_prob"] = out["paxton_market_prob"] / total
     out["normalized_cornyn_prob"] = out["cornyn_market_prob"] / total
     out["normalized_other_prob"] = out["other_implied_prob"] / total
+    out["paxton_spread"] = out["paxton_ask"] - out["paxton_bid"]
+    out["cornyn_spread"] = out["cornyn_ask"] - out["cornyn_bid"]
+    out["average_spread"] = out[["paxton_spread", "cornyn_spread"]].mean(axis=1)
+    out["days_stale"] = (AS_OF - out["timestamp"]).dt.days.clip(lower=0)
+    out["stale_price_flag"] = out["days_stale"] > STALE_MARKET_DAYS
+    out["liquidity_warning"] = np.select(
+        [
+            out["liquidity"].notna() & (out["liquidity"] < 10_000),
+            out["liquidity"].isna() & out["volume"].isna(),
+        ],
+        ["thin_liquidity", "liquidity_unknown"],
+        default="ok",
+    )
+    out["settlement_warning"] = np.where(
+        out["settlement_notes"].fillna("").astype(str).str.lower().str.contains("verify"),
+        "verify_contract_terms",
+        "ok",
+    )
     return out
 
 
@@ -216,7 +273,16 @@ def process_early_vote_turnout(early_vote: pd.DataFrame) -> pd.DataFrame:
         out[column] = pd.to_numeric(out[column], errors="coerce")
     calculated_total = out["early_in_person_votes"].fillna(0) + out["mail_votes"].fillna(0)
     out["total_early_votes"] = out["total_early_votes"].fillna(calculated_total.where(calculated_total > 0))
-    out["data_status"] = np.where(out["total_early_votes"].notna(), "reported", "not_started_or_missing")
+    out["days_until_early_vote"] = (EARLY_VOTE_START - AS_OF).days
+    out["available_for_model"] = AS_OF >= EARLY_VOTE_START
+    out["data_status"] = np.select(
+        [
+            out["total_early_votes"].notna(),
+            AS_OF < EARLY_VOTE_START,
+        ],
+        ["reported", "not_started"],
+        default="missing_after_start",
+    )
     return out
 
 
@@ -252,7 +318,7 @@ def process_county_turnout_model(
     out = pd.DataFrame(rows)
     if not out.empty:
         out = out.merge(
-            features[["county", "county_type", "region_group", "metro_area"]].rename(
+            features.rename(
                 columns={
                     "county_type": "feature_county_type",
                     "region_group": "feature_region_group",
@@ -278,10 +344,17 @@ def process_county_turnout_model(
     equivalent_total = out["paxton_transfer_equivalent_votes"] + out["cornyn_transfer_equivalent_votes"]
     out["paxton_transfer_share"] = out["paxton_transfer_equivalent_votes"] / equivalent_total
     out["cornyn_transfer_share"] = out["cornyn_transfer_equivalent_votes"] / equivalent_total
+    out["paxton_primary_share"] = out["paxton_primary_votes"] / out["primary_votes"]
+    out["cornyn_primary_share"] = out["cornyn_primary_votes"] / out["primary_votes"]
+    out["hunt_primary_share"] = out["hunt_primary_votes"] / out["primary_votes"]
+    out["gop_share_of_statewide_primary"] = out["primary_votes"] / out["primary_votes"].sum()
+    if "runoff_retention_baseline" not in out.columns:
+        out["runoff_retention_baseline"] = np.nan
 
     retention = {"low": 0.35, "mid": 0.50, "high": 0.65}
     for scenario, rate in retention.items():
-        out[f"{scenario}_retention_rate"] = rate
+        baseline = out["runoff_retention_baseline"].fillna(rate)
+        out[f"{scenario}_retention_rate"] = baseline
         out[f"{scenario}_turnout_votes"] = out["primary_votes"] * rate
         out[f"{scenario}_paxton_projected_votes"] = out[f"{scenario}_turnout_votes"] * out["paxton_transfer_share"]
         out[f"{scenario}_cornyn_projected_votes"] = out[f"{scenario}_turnout_votes"] * out["cornyn_transfer_share"]
@@ -290,21 +363,61 @@ def process_county_turnout_model(
         )
 
     detailed_counties = out[~out["county"].astype(str).eq("statewide_unallocated")]
+    statewide_placeholder = out["county"].astype(str).eq("statewide_unallocated").any()
     status = pd.DataFrame(
         [
             {
                 "county_detail_available": bool(len(detailed_counties) > 0),
                 "county_rows_with_candidate_votes": int(len(detailed_counties)),
                 "candidate_vote_coverage_pct": 1.0,
+                "statewide_placeholder_present": bool(statewide_placeholder),
                 "current_limitation": (
-                    "Only statewide candidate totals are loaded in county_primary_results.csv. "
-                    "Import county-by-county official/SOS rows before treating this as a true county model."
+                    "County-level projection is ready, but only loaded counties should be treated as local signals. "
+                    "A statewide placeholder means full county candidate rows are still unavailable."
                 ),
-                "next_refresh_priority": "Replace statewide_unallocated with full county rows and add daily early vote once available.",
+                "next_refresh_priority": "Replace statewide_unallocated with full official county rows and add daily early vote once available.",
             }
         ]
     )
     return out, status
+
+
+def build_runoff_county_projection(county_turnout_model: pd.DataFrame, early_vote: pd.DataFrame) -> pd.DataFrame:
+    early = early_vote.copy()
+    reported = early[early["data_status"].eq("reported")]
+    early_totals = reported.groupby("county", as_index=False)["total_early_votes"].sum()
+    early_totals = early_totals.rename(columns={"total_early_votes": "reported_early_votes"})
+
+    rows = []
+    for _, county in county_turnout_model.iterrows():
+        for scenario in ["low", "mid", "high"]:
+            projected_turnout = float(county[f"{scenario}_turnout_votes"])
+            rows.append(
+                {
+                    "county": county["county"],
+                    "scenario": scenario,
+                    "county_type": county.get("county_type", ""),
+                    "region_group": county.get("region_group", ""),
+                    "metro_area": county.get("metro_area", ""),
+                    "primary_votes": float(county["primary_votes"]),
+                    "runoff_retention_rate": float(county[f"{scenario}_retention_rate"]),
+                    "projected_turnout_votes": projected_turnout,
+                    "projected_paxton_votes": float(county[f"{scenario}_paxton_projected_votes"]),
+                    "projected_cornyn_votes": float(county[f"{scenario}_cornyn_projected_votes"]),
+                    "projected_paxton_margin_votes": float(county[f"{scenario}_paxton_margin_votes"]),
+                    "paxton_transfer_share": float(county["paxton_transfer_share"]),
+                    "cornyn_transfer_share": float(county["cornyn_transfer_share"]),
+                    "early_vote_available": bool(AS_OF >= EARLY_VOTE_START),
+                }
+            )
+    out = pd.DataFrame(rows)
+    if early_totals.empty:
+        out["reported_early_votes"] = np.nan
+        out["early_vote_share_of_projection"] = np.nan
+    else:
+        out = out.merge(early_totals, on="county", how="left")
+        out["early_vote_share_of_projection"] = out["reported_early_votes"] / out["projected_turnout_votes"]
+    return out
 
 
 def weighted_mean(values: pd.Series, weights: pd.Series) -> float:
@@ -397,6 +510,53 @@ def build_poll_diagnostics(polls: pd.DataFrame) -> pd.DataFrame:
         }
     )
     return pd.DataFrame(rows)
+
+
+def build_poll_miss_diagnostics(polls: pd.DataFrame, primary: pd.DataFrame) -> pd.DataFrame:
+    final_primary = polls[
+        (polls["stage"].eq("primary"))
+        & (polls["release_date"] < pd.Timestamp("2026-03-03"))
+        & (polls["release_date"] >= pd.Timestamp("2026-02-13"))
+    ].copy()
+    if final_primary.empty:
+        return pd.DataFrame()
+
+    statewide = primary[primary["statewide_or_county"].eq("statewide")].copy()
+    actual = dict(zip(statewide["candidate"], statewide["pct"]))
+    weighted_paxton = weighted_mean(final_primary["paxton_pct"], final_primary["sample_size"])
+    weighted_cornyn = weighted_mean(final_primary["cornyn_pct"], final_primary["sample_size"])
+    poll_two_way_paxton = weighted_paxton / (weighted_paxton + weighted_cornyn)
+    actual_two_way_paxton = actual["Ken Paxton"] / (actual["Ken Paxton"] + actual["John Cornyn"])
+    poll_margin = 200 * poll_two_way_paxton - 100
+    actual_margin = 200 * actual_two_way_paxton - 100
+    margin_miss = actual_margin - poll_margin
+
+    return pd.DataFrame(
+        [
+            {
+                "diagnostic": "final_pre_primary_poll_average",
+                "poll_count": int(len(final_primary)),
+                "poll_window_start": str(final_primary["release_date"].min().date()),
+                "poll_window_end": str(final_primary["release_date"].max().date()),
+                "poll_average_paxton_pct": float(weighted_paxton),
+                "poll_average_cornyn_pct": float(weighted_cornyn),
+                "actual_paxton_pct": float(actual["Ken Paxton"]),
+                "actual_cornyn_pct": float(actual["John Cornyn"]),
+                "paxton_poll_error_points": float(actual["Ken Paxton"] - weighted_paxton),
+                "cornyn_poll_error_points": float(actual["John Cornyn"] - weighted_cornyn),
+                "poll_two_candidate_paxton_margin": float(poll_margin),
+                "actual_two_candidate_paxton_margin": float(actual_margin),
+                "two_candidate_margin_miss_points": float(margin_miss),
+                "repeat_miss_fraction_used": 0.50,
+                "repeat_miss_paxton_margin_adjustment": float(0.50 * margin_miss),
+                "source_url": "https://www.270towin.com/2026-senate-polls/texas",
+                "notes": (
+                    "Weighted final primary polling average compared with March 3 primary result. "
+                    "Negative margin miss means Cornyn overperformed the polling margin."
+                ),
+            }
+        ]
+    )
 
 
 def aggregate_hunt_transfer(hunt_transfer: pd.DataFrame) -> Dict[str, float]:
@@ -548,6 +708,7 @@ def build_scenarios(
     prior = primary_transfer_prior(primary, hunt_transfer)
     money = money_media_adjustment(finance_ads)
     strength = candidate_strength_adjustment(candidate_strength)
+    poll_miss = build_poll_miss_diagnostics(polls, primary)
 
     base_sigma = max(6.5, poll_dispersion + 3.0)
     polling_plus_primary_margin = 0.78 * poll_margin + 0.22 * prior["two_candidate_margin"]
@@ -558,6 +719,11 @@ def build_scenarios(
         + 0.10 * prior["top_two_primary_margin"]
         + strength["candidate_strength_margin_adjustment"]
         + money["money_media_margin_adjustment"]
+    )
+    repeat_miss_adjustment = (
+        float(poll_miss["repeat_miss_paxton_margin_adjustment"].iloc[0])
+        if not poll_miss.empty
+        else 0.0
     )
 
     scenario_specs = [
@@ -586,6 +752,12 @@ def build_scenarios(
             base_sigma + 0.75,
             "Higher-turnout runoff scenario; assumes Cornyn reaches more infrequent/moderate GOP voters.",
         ),
+        (
+            "repeat_primary_poll_error",
+            full_margin + repeat_miss_adjustment,
+            base_sigma + 1.0,
+            "Stress test only: applies half of the March primary polling-margin miss toward Cornyn.",
+        ),
     ]
 
     rows = []
@@ -613,6 +785,7 @@ def build_scenarios(
         "weighted_poll_dispersion_points": poll_dispersion,
         "primary_transfer_prior_margin_points": prior["two_candidate_margin"],
         "top_two_primary_margin_points": prior["top_two_primary_margin"],
+        "repeat_primary_poll_error_margin_adjustment": repeat_miss_adjustment,
         **{key: value for key, value in prior.items() if key.startswith("hunt_")},
         **strength,
         **money,
@@ -720,6 +893,62 @@ def build_shock_model(scenario_df: pd.DataFrame, shock_scenarios: pd.DataFrame) 
     return pd.DataFrame(rows)
 
 
+def latest_date_value(frame: pd.DataFrame, columns: Iterable[str]) -> str:
+    dates = []
+    for column in columns:
+        if column in frame.columns:
+            parsed = pd.to_datetime(frame[column], errors="coerce")
+            if parsed.notna().any():
+                dates.append(parsed.max())
+    if not dates:
+        return ""
+    return str(max(dates).date())
+
+
+def build_data_quality_report(raw: Dict[str, pd.DataFrame], processed: Dict[str, pd.DataFrame]) -> pd.DataFrame:
+    groups = [
+        ("polls", raw["polls"], ["release_date", "end_date"], "baseline"),
+        ("county_results", raw["county_primary_results"], ["election_date"], "projection_input"),
+        ("early_vote", processed["early_vote_turnout"], ["report_date"], "inactive_until_early_vote"),
+        ("market_prices", processed["market_timeseries"], ["timestamp"], "external_price_check"),
+        ("finance_ads", raw["finance_ads"], ["date_end", "date_start"], "baseline_adjustment"),
+        ("endorsements_events", raw["endorsements_events"], ["date"], "qualitative_shock_tracking"),
+        ("turnout_signals", raw["turnout_signals"], ["signal_date"], "scenario_context"),
+        ("poll_miss", processed["poll_miss_diagnostics"], ["poll_window_end"], "stress_test_only"),
+    ]
+    rows = []
+    for name, frame, date_columns, model_use in groups:
+        latest = latest_date_value(frame, date_columns)
+        latest_ts = pd.Timestamp(latest) if latest else pd.NaT
+        days_stale = int((AS_OF - latest_ts).days) if pd.notna(latest_ts) else None
+        note_column = "notes" if "notes" in frame.columns else "model_note" if "model_note" in frame.columns else None
+        missing_notes = int(frame[note_column].fillna("").astype(str).str.strip().eq("").sum()) if note_column else len(frame)
+        missing_sources = (
+            int(frame["source_url"].fillna("").astype(str).str.strip().eq("").sum())
+            if "source_url" in frame.columns
+            else len(frame)
+        )
+        if name == "market_prices":
+            stale_flag = bool(processed["market_timeseries"]["stale_price_flag"].all())
+        elif name == "early_vote":
+            stale_flag = not bool(processed["early_vote_turnout"]["available_for_model"].any())
+        else:
+            stale_flag = bool(days_stale is not None and days_stale > 21)
+        rows.append(
+            {
+                "signal_group": name,
+                "row_count": int(len(frame)),
+                "latest_source_date": latest,
+                "days_stale": days_stale,
+                "missing_source_count": missing_sources,
+                "missing_notes_count": missing_notes,
+                "stale_flag": stale_flag,
+                "model_use_status": model_use,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def binary_share_kelly_fraction(fair_probability: float, market_price: float) -> float:
     if not 0 < market_price < 1:
         return 0.0
@@ -793,6 +1022,10 @@ def build_wager_value_table(
                 "cornyn_model_probability": cornyn_fair,
                 "paxton_buy_price": float(paxton_buy_price),
                 "cornyn_buy_price": float(cornyn_buy_price),
+                "average_spread": float(market["average_spread"]) if pd.notna(market["average_spread"]) else np.nan,
+                "stale_price_flag": bool(market["stale_price_flag"]),
+                "liquidity_warning": market["liquidity_warning"],
+                "settlement_warning": market["settlement_warning"],
                 "paxton_edge": paxton_edge,
                 "cornyn_edge": cornyn_edge,
                 "required_edge": required_edge,
@@ -836,6 +1069,7 @@ def write_outputs(frames: Dict[str, pd.DataFrame], scenario_df: pd.DataFrame, di
 
 def main() -> Dict[str, object]:
     raw = read_raw()
+    validate_source_metadata(raw)
     validate_primary_results(raw["primary_results"])
     validate_polls(raw["polls"])
     validate_hunt_transfer(raw["hunt_transfer"])
@@ -862,6 +1096,7 @@ def main() -> Dict[str, object]:
     sensitivity = build_sensitivity(polls, primary, finance_ads, hunt_transfer, candidate_strength)
     market_comparison = build_market_comparison(markets, scenario_df)
     poll_diagnostics = build_poll_diagnostics(polls)
+    poll_miss_diagnostics = build_poll_miss_diagnostics(polls, primary)
     margin_distribution = build_margin_distribution(scenario_df)
     shock_model = build_shock_model(scenario_df, shock_scenarios)
     county_turnout_model, county_model_status = process_county_turnout_model(
@@ -869,6 +1104,7 @@ def main() -> Dict[str, object]:
         county_features,
         hunt_transfer,
     )
+    runoff_county_projection = build_runoff_county_projection(county_turnout_model, early_vote_turnout)
     wager_value_table = build_wager_value_table(market_timeseries, scenario_df, wager_settings)
     diagnostics["poll_effective_count"] = float(
         poll_diagnostics.loc[poll_diagnostics["diagnostic"] == "effective_poll_count", "value"].iloc[0]
@@ -898,12 +1134,15 @@ def main() -> Dict[str, object]:
         "sensitivity": sensitivity,
         "market_comparison": market_comparison,
         "poll_diagnostics": poll_diagnostics,
+        "poll_miss_diagnostics": poll_miss_diagnostics,
         "margin_distribution": margin_distribution,
         "shock_model": shock_model,
         "county_turnout_model": county_turnout_model,
         "county_model_status": county_model_status,
+        "runoff_county_projection": runoff_county_projection,
         "wager_value_table": wager_value_table,
     }
+    processed["data_quality_report"] = build_data_quality_report(raw, processed)
     write_outputs(processed, scenario_df, diagnostics)
 
     full = scenario_df[scenario_df["scenario"] == "full_model_mid_turnout"].iloc[0]
@@ -913,7 +1152,13 @@ def main() -> Dict[str, object]:
         f"mean Paxton margin {full['mean_paxton_margin_points']:.1f} pts"
     )
     print(f"Wrote processed outputs to {PROCESSED_DIR}")
-    return {"scenarios": scenario_df, "diagnostics": diagnostics, "wager_value_table": wager_value_table}
+    return {
+        "scenarios": scenario_df,
+        "diagnostics": diagnostics,
+        "wager_value_table": wager_value_table,
+        "poll_miss_diagnostics": poll_miss_diagnostics,
+        "data_quality_report": processed["data_quality_report"],
+    }
 
 
 if __name__ == "__main__":

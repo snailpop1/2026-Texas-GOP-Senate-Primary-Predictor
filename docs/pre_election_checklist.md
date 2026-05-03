@@ -11,6 +11,7 @@ Use this checklist daily through the May 26, 2026 runoff, and immediately after 
 7. Run `python scripts/build_dataset.py`.
 8. Run `python -m pytest`.
 9. Re-execute `notebooks/tx_gop_senate_runoff_model.ipynb`.
-10. Review `data/processed/wager_value_table.csv`, `data/processed/poll_diagnostics.csv`, `data/processed/sensitivity.csv`, and `data/processed/shock_model.csv`.
+10. Review `data/processed/data_quality_report.csv` first for stale sources or missing metadata.
+11. Review `data/processed/wager_value_table.csv`, `data/processed/poll_diagnostics.csv`, `data/processed/poll_miss_diagnostics.csv`, `data/processed/runoff_county_projection.csv`, `data/processed/sensitivity.csv`, and `data/processed/shock_model.csv`.
 
 Do not treat a value flag as a standalone recommendation. It only means the model edge cleared the configured spread, fee, and uncertainty buffers.

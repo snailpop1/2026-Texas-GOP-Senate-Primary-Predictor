@@ -1,0 +1,4 @@
+county,scenario,county_type,region_group,metro_area,primary_votes,runoff_retention_rate,projected_turnout_votes,projected_paxton_votes,projected_cornyn_votes,projected_paxton_margin_votes,paxton_transfer_share,cornyn_transfer_share,early_vote_available,reported_early_votes,early_vote_share_of_projection,last_updated
+statewide_unallocated,low,statewide,statewide,statewide,2166024.0,0.35,758108.3999999999,383150.8554191278,374957.5445808721,8193.310838255682,0.5054037858162868,0.49459621418371325,False,,,2026-05-03
+statewide_unallocated,mid,statewide,statewide,statewide,2166024.0,0.5,1083012.0,547358.3648844684,535653.6351155316,11704.729768936755,0.5054037858162868,0.49459621418371325,False,,,2026-05-03
+statewide_unallocated,high,statewide,statewide,statewide,2166024.0,0.65,1407915.6,711565.8743498089,696349.7256501912,15216.148699617712,0.5054037858162868,0.49459621418371325,False,,,2026-05-03

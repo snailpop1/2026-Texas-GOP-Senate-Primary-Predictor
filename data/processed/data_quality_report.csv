@@ -1,0 +1,9 @@
+signal_group,row_count,latest_source_date,days_stale,missing_source_count,missing_notes_count,stale_flag,model_use_status,last_updated
+polls,35,2026-04-17,16,0,0,False,baseline,2026-05-03
+county_results,4,2026-03-03,61,0,0,True,projection_input,2026-05-03
+early_vote,1,2026-05-03,0,0,0,True,inactive_until_early_vote,2026-05-03
+market_prices,6,2026-05-03,0,0,0,False,external_price_check,2026-05-03
+finance_ads,11,2026-04-15,18,0,0,False,baseline_adjustment,2026-05-03
+endorsements_events,8,2026-05-01,2,0,0,False,qualitative_shock_tracking,2026-05-03
+turnout_signals,10,2026-04-27,6,0,0,False,scenario_context,2026-05-03
+poll_miss,1,2026-03-02,62,0,0,True,stress_test_only,2026-05-03

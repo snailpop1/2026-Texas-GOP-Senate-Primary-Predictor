@@ -15,6 +15,7 @@
     "weighted_poll_dispersion_points": 5.482507635623156,
     "primary_transfer_prior_margin_points": 1.0807571632573456,
     "top_two_primary_margin_points": -1.4661681039109737,
+    "repeat_primary_poll_error_margin_adjustment": -3.9657491511327123,
     "hunt_paxton_explicit_pct": 46.98157968364449,
     "hunt_cornyn_explicit_pct": 32.080950657964856,
     "hunt_undecided_other_pct": 21.47480444321815,
