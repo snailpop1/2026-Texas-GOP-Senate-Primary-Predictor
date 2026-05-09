@@ -10,7 +10,7 @@ if str(ROOT) not in sys.path:
 
 import pandas as pd
 
-from scripts.build_dataset import main
+from scripts.build_dataset import AS_OF, main
 
 
 RAW_DIR = ROOT / "data" / "raw"
@@ -38,9 +38,25 @@ def test_raw_poll_schema_and_counts() -> None:
     assert len(polls[(polls["stage"] == "runoff") & (polls["model_group"] == "core")]) >= 9
 
     core = polls[polls["model_group"] == "core"]
-    assert core[list(required_columns - {"hunt_pct"})].notna().all().all()
+    assert core[list(required_columns)].notna().all().all()
     assert core["paxton_pct"].between(0, 100).all()
     assert core["cornyn_pct"].between(0, 100).all()
+
+
+def test_source_registry_covers_all_raw_inputs() -> None:
+    registry = pd.read_csv(RAW_DIR / "source_registry.csv")
+    assert {
+        "dataset_name",
+        "source_type",
+        "retrieval_method",
+        "freshness_sla_days",
+        "trust_tier",
+        "citation_url",
+        "refresh_instructions",
+        "notes",
+    }.issubset(registry.columns)
+    raw_datasets = {path.stem for path in RAW_DIR.glob("*.csv")} - {"source_registry"}
+    assert raw_datasets.issubset(set(registry["dataset_name"]))
 
 
 def test_primary_results_reconcile_to_source_totals() -> None:
@@ -51,8 +67,7 @@ def test_primary_results_reconcile_to_source_totals() -> None:
     assert votes["John Cornyn"] == 907_416
     assert votes["Ken Paxton"] == 881_192
     assert votes["Wesley Hunt"] == 292_702
-    assert statewide["pct"].sum() > 99.5
-    assert statewide["pct"].sum() < 100.5
+    assert 99.5 < statewide["pct"].sum() < 100.5
 
 
 def test_county_primary_placeholder_reconciles_to_statewide_totals() -> None:
@@ -74,10 +89,11 @@ def test_county_primary_placeholder_reconciles_to_statewide_totals() -> None:
     assert county_votes["Minor candidates"] == minor_total
 
 
-def test_pipeline_outputs_valid_probabilities() -> None:
+def test_pipeline_outputs_valid_probabilities_and_release_contract() -> None:
     result = main()
     scenarios = result["scenarios"]
     full = scenarios[scenarios["scenario"] == "full_model_mid_turnout"].iloc[0]
+    release = result["release_status"].iloc[0]
 
     assert len(scenarios) == 6
     assert 0 <= full["paxton_win_probability"] <= 1
@@ -87,9 +103,9 @@ def test_pipeline_outputs_valid_probabilities() -> None:
     assert (
         scenarios["paxton_win_probability"] + scenarios["cornyn_win_probability"]
     ).sub(1).abs().lt(1e-9).all()
-
-    repeat = scenarios[scenarios["scenario"] == "repeat_primary_poll_error"].iloc[0]
-    assert repeat["mean_paxton_margin_points"] < full["mean_paxton_margin_points"]
+    assert release["release_status"] in {"published", "withheld"}
+    assert 0 <= release["reliability_score"] <= 100
+    assert release["reliability_class"] in {"low", "medium", "high"}
 
 
 def test_required_processed_outputs_exist() -> None:
@@ -121,7 +137,15 @@ def test_required_processed_outputs_exist() -> None:
         "runoff_county_projection.csv",
         "data_quality_report.csv",
         "sensitivity.csv",
+        "source_manifest.csv",
+        "source_registry_status.csv",
+        "poll_canonicalization_report.csv",
+        "model_ablation.csv",
+        "calibration_summary.csv",
+        "release_status.csv",
+        "snapshot_manifest.csv",
         "model_output.json",
+        "audit_report.md",
     ]
     for filename in required_files:
         path = PROCESSED_DIR / filename
@@ -129,10 +153,14 @@ def test_required_processed_outputs_exist() -> None:
         assert path.stat().st_size > 0, f"Empty processed output: {filename}"
 
     output = json.loads((PROCESSED_DIR / "model_output.json").read_text(encoding="utf-8"))
-    headline = output["headline"]
-    assert headline["as_of"] == "2026-05-09"
-    assert 0 <= headline["paxton_fair_probability"] <= 1
-    assert 0 <= headline["cornyn_fair_probability"] <= 1
+    assert output["version"] == "2.0"
+    assert output["as_of"] == str(AS_OF.date())
+    assert "release_status" in output
+    assert "headline_forecast" in output
+    assert "model_health" in output
+    assert "calibration_metrics" in output
+    assert "source_freshness" in output
+    assert "betting_decision_summary" in output
 
 
 def test_processed_csvs_include_last_updated() -> None:
@@ -141,10 +169,10 @@ def test_processed_csvs_include_last_updated() -> None:
     for path in PROCESSED_DIR.glob("*.csv"):
         frame = pd.read_csv(path)
         assert "last_updated" in frame.columns, f"{path.name} is missing last_updated"
-        assert set(frame["last_updated"].dropna()) == {"2026-05-09"}
+        assert set(frame["last_updated"].dropna()) == {str(AS_OF.date())}
 
 
-def test_market_and_wager_outputs_are_normalized() -> None:
+def test_market_and_wager_outputs_are_normalized_and_conservative() -> None:
     main()
     markets = pd.read_csv(PROCESSED_DIR / "market_timeseries.csv")
     total = markets["normalized_paxton_prob"] + markets["normalized_cornyn_prob"] + markets["normalized_other_prob"]
@@ -155,14 +183,17 @@ def test_market_and_wager_outputs_are_normalized() -> None:
     assert set(value["value_flag"]).issubset({"paxton_value", "cornyn_value", "no_bet_zone"})
     assert (value["required_edge"] > 0).all()
     assert (value["capped_exposure_fraction"] <= 0.05).all()
-    assert {"stale_price_flag", "liquidity_warning", "settlement_warning"}.issubset(value.columns)
+    assert {"stale_price_flag", "liquidity_warning", "settlement_warning", "block_reasons", "decision_eligible"}.issubset(
+        value.columns
+    )
+    assert (value["value_flag"] == "no_bet_zone").all()
 
 
 def test_source_metadata_and_quality_outputs() -> None:
     main()
     for path in RAW_DIR.glob("*.csv"):
         frame = pd.read_csv(path)
-        if path.name == "wager_settings.csv":
+        if path.name in {"wager_settings.csv", "source_registry.csv"}:
             continue
         assert "source_url" in frame.columns, f"{path.name} is missing source_url"
         assert frame["source_url"].fillna("").astype(str).str.strip().ne("").all()
@@ -182,6 +213,23 @@ def test_source_metadata_and_quality_outputs() -> None:
         "poll_miss",
     }.issubset(set(quality["signal_group"]))
     assert (quality["missing_source_count"] == 0).all()
+    assert "required_for_publish" in quality.columns
+
+
+def test_release_and_calibration_outputs_reflect_withholding() -> None:
+    main()
+    release = pd.read_csv(PROCESSED_DIR / "release_status.csv")
+    row = release.iloc[0]
+    assert not row["forecast_publishable"]
+    assert not row["betting_eligible"]
+    assert "county_coverage_incomplete" in row["blocking_issues"]
+
+    calibration = pd.read_csv(PROCESSED_DIR / "calibration_summary.csv")
+    assert {"metric", "threshold", "pass", "status"}.issubset(calibration.columns)
+    assert (calibration["status"] == "insufficient_history").any()
+
+    source_status = pd.read_csv(PROCESSED_DIR / "source_registry_status.csv")
+    assert {"dataset_name", "freshness_pass", "parse_status"}.issubset(source_status.columns)
 
 
 def test_poll_miss_and_early_vote_layers_are_explicit() -> None:

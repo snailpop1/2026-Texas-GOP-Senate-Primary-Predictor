@@ -1,0 +1,3 @@
+check,value,status,notes,last_updated
+core_duplicate_canonical_ids,0,pass,Duplicate core poll rows after canonical key normalization.,2026-05-09
+core_overlapping_same_house_polls,0,pass,Potential overlapping field periods from the same pollster/sponsor/population grouping.,2026-05-09

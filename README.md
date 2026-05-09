@@ -2,20 +2,20 @@
 
 Reproducible data science project for the May 26, 2026 Texas Republican U.S. Senate runoff between Ken Paxton and John Cornyn.
 
-The project combines public polling, March primary results, Hunt-voter transfer evidence, campaign finance/ad signals, turnout context, and prediction-market snapshots into a transparent win-probability model. It is built for auditability: every input row has a source URL, the model is implemented in a repeatable Python pipeline, and the notebook shows the assumptions behind the headline probability.
+The project combines public polling, March primary results, Hunt-voter transfer evidence, campaign finance/ad signals, turnout context, and prediction-market snapshots into a transparent win-probability model. It is built for auditability: every input row has a source URL, the model is implemented in a repeatable Python pipeline, and the pipeline now emits a release-gated forecast package, source manifest, immutable raw snapshot manifest, and audit report for each refresh.
 
 This is an election-forecasting research project, not financial advice. Prediction markets and political betting are risky, volatile, and jurisdiction-dependent.
 
 ## Headline Result
 
-As of May 9, 2026, the full model estimates:
+As of May 9, 2026, the internal full model estimate is:
 
-| Candidate | Fair Probability |
+| Candidate | Internal Fair Probability |
 | --- | ---: |
 | Ken Paxton | 61.6% |
 | John Cornyn | 38.4% |
 
-The model mean is Paxton +2.6 points, with an intentionally wide 80% interval from Cornyn +8.7 to Paxton +13.8. The wide interval reflects a low-turnout runoff, mixed public polling, sponsor-linked polls, and potential late shocks such as a Trump endorsement.
+The model mean is Paxton +2.6 points, with an intentionally wide 80% interval from Cornyn +8.7 to Paxton +13.8. The wide interval reflects a low-turnout runoff, mixed public polling, sponsor-linked polls, and potential late shocks such as a Trump endorsement. The forecast package currently marks the run as `withheld` rather than publishable because county coverage is incomplete and calibration/release gates intentionally fail closed.
 
 ## What This Demonstrates
 
@@ -24,7 +24,9 @@ The model mean is Paxton +2.6 points, with an intentionally wide 80% interval fr
 - Source reconciliation against reported primary results.
 - Sensitivity testing across pollsters and partisan/internal polls.
 - Clear separation between model estimates and market prices.
-- Wager-risk tooling with no-bet thresholds, market-friction buffers, shock tests, and capped stake-sizing math.
+- Wager-risk tooling with default no-bet behavior, explicit block reasons, market-friction buffers, shock tests, and capped stake-sizing math.
+- Release gating via calibration, source freshness, county-coverage, and market-safety checks.
+- Immutable raw snapshot manifest and source registry status for each build.
 - Reproducible analysis suitable for review in a notebook or command line.
 
 ## Repository Structure
@@ -48,22 +50,22 @@ docs/
 Install dependencies:
 
 ```powershell
-python -m pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 Rebuild the processed data and model output:
 
 ```powershell
-python scripts/build_dataset.py
+python3 scripts/build_dataset.py
 ```
 
 Run tests:
 
 ```powershell
-pytest
+python3 -m pytest
 ```
 
-Open `notebooks/tx_gop_senate_runoff_model.ipynb` for the narrative analysis, charts, scenario table, sensitivity checks, and market comparison.
+Review `data/processed/model_output.json` and `data/processed/audit_report.md` first. The notebook remains exploratory and secondary to the generated forecast package.
 
 ## Data Snapshot
 
@@ -90,7 +92,7 @@ The model is intentionally transparent rather than black-box:
 - Candidate-strength adjustment: small capped Paxton boost from favorability, retention, and supporter commitment signals.
 - Money/media adjustment: capped Cornyn boost for cash and ad-spending advantage.
 - Market comparison: prediction markets are excluded from the core model and used only as an external price check.
-- Wager decision layer: flags value only when model edge clears configurable spread, fee, and uncertainty buffers. Fractional Kelly and flat bankroll settings are included as research math, not as a recommendation.
+- Wager decision layer: defaults to `no_bet_zone` unless forecast publication, calibration, freshness, liquidity, settlement, and scenario-durability gates all pass. Fractional Kelly and flat bankroll settings are included as research math, not as a recommendation.
 - Shock model: stress-tests late Trump endorsement, Hunt endorsement, major new poll, repeat primary polling miss, turnout collapse/surge, money saturation, market-liquidity, and campaign/legal-event variance.
 
 ## Wager-Readiness Layer
@@ -104,13 +106,20 @@ The project now produces additional outputs for disciplined price comparison:
 | `data/processed/margin_distribution.csv` | Monte Carlo margin distribution by scenario. |
 | `data/processed/shock_model.csv` | Stress-test probabilities under late endorsement, poll, or campaign-event shocks. |
 | `data/processed/market_timeseries.csv` | Normalized market snapshots with settlement, stale-price, and liquidity warnings. |
-| `data/processed/wager_value_table.csv` | No-bet/value flags after edge buffers, fees, spread assumptions, stale checks, and capped exposure. |
+| `data/processed/wager_value_table.csv` | Safety-gated market decision table with default no-bet behavior and explicit block reasons. |
 | `data/processed/county_turnout_model.csv` | County-turnout framework using primary totals, Hunt transfer, and low/mid/high retention assumptions. |
 | `data/processed/runoff_county_projection.csv` | Low/mid/high runoff vote projection by loaded county row, with early-vote availability flags. |
 | `data/processed/early_vote_turnout.csv` | Daily early-vote table ready for May 18-22 county updates. |
 | `data/processed/data_quality_report.csv` | Row counts, source freshness, missing-source checks, stale flags, and model-use status by signal group. |
+| `data/processed/source_manifest.csv` | Canonical manifest of every raw dataset used in the run, including file hashes. |
+| `data/processed/source_registry_status.csv` | Source freshness and parse-status table derived from `data/raw/source_registry.csv`. |
+| `data/processed/calibration_summary.csv` | Calibration and reliability gate summary, including insufficient-history blocks. |
+| `data/processed/model_ablation.csv` | Bounded component-by-component impact on the headline forecast. |
+| `data/processed/release_status.csv` | Publish/withhold decision, reliability score, and blocking issues. |
+| `data/processed/snapshot_manifest.csv` | Immutable raw snapshot inventory for the run. |
+| `data/processed/audit_report.md` | Human-readable audit report for the forecast package. |
 
-Current limitation: the county turnout framework is structurally ready, but it is not yet a true county-by-county projection because the raw county candidate rows have not been imported. Until `data/raw/county_primary_results.csv` is replaced with official county rows, county output should be treated as a scaffold and validation target, not a local geographic signal.
+Current limitation: the county turnout framework is structurally ready, but it is not yet a true county-by-county projection because the raw county candidate rows have not been imported. Until `data/raw/county_primary_results.csv` is replaced with official county rows, county output should be treated as a scaffold and validation target, not a local geographic signal. Under the current conservative release rules, that limitation is enough to keep the forecast package in a withheld state.
 
 ## Current Scenario Output
 
@@ -159,10 +168,11 @@ When a new poll or market snapshot appears:
 
 1. Add the source row to the relevant `data/raw/*.csv`.
 2. Keep `source_url` and `notes` populated.
-3. Run `python scripts/build_dataset.py`.
-4. Run `pytest`.
-5. Review `data/processed/data_quality_report.csv` for stale sources and missing metadata.
-6. Reopen or rerun the notebook.
+3. Run `python3 scripts/build_dataset.py`.
+4. Run `python3 -m pytest`.
+5. Review `data/processed/release_status.csv`, `data/processed/calibration_summary.csv`, and `data/processed/data_quality_report.csv`.
+6. Review `data/processed/model_output.json` and `data/processed/audit_report.md`.
+7. Reopen or rerun the notebook only if you need exploratory analysis.
 
 If President Trump endorses either candidate, add it to `data/raw/endorsements_events.csv`; do not change the quantitative model until there is evidence from polling or observed market movement.
 
