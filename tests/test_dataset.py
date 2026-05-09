@@ -130,7 +130,7 @@ def test_required_processed_outputs_exist() -> None:
 
     output = json.loads((PROCESSED_DIR / "model_output.json").read_text(encoding="utf-8"))
     headline = output["headline"]
-    assert headline["as_of"] == "2026-05-03"
+    assert headline["as_of"] == "2026-05-09"
     assert 0 <= headline["paxton_fair_probability"] <= 1
     assert 0 <= headline["cornyn_fair_probability"] <= 1
 
@@ -141,7 +141,7 @@ def test_processed_csvs_include_last_updated() -> None:
     for path in PROCESSED_DIR.glob("*.csv"):
         frame = pd.read_csv(path)
         assert "last_updated" in frame.columns, f"{path.name} is missing last_updated"
-        assert set(frame["last_updated"].dropna()) == {"2026-05-03"}
+        assert set(frame["last_updated"].dropna()) == {"2026-05-09"}
 
 
 def test_market_and_wager_outputs_are_normalized() -> None:

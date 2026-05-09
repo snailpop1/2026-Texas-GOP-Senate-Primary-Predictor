@@ -13,11 +13,11 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
-AS_OF = pd.Timestamp("2026-05-03")
+AS_OF = pd.Timestamp("2026-05-09")
 RUNOFF_ELECTION_DATE = pd.Timestamp("2026-05-26")
 EARLY_VOTE_START = pd.Timestamp("2026-05-18")
 STALE_MARKET_DAYS = 2
-RNG_SEED = 20260503
+RNG_SEED = 20260509
 
 
 def read_raw() -> Dict[str, pd.DataFrame]:

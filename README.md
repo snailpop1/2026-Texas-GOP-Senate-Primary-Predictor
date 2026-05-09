@@ -8,14 +8,14 @@ This is an election-forecasting research project, not financial advice. Predicti
 
 ## Headline Result
 
-As of May 3, 2026, the full model estimates:
+As of May 9, 2026, the full model estimates:
 
 | Candidate | Fair Probability |
 | --- | ---: |
-| Ken Paxton | 60.2% |
-| John Cornyn | 39.8% |
+| Ken Paxton | 61.6% |
+| John Cornyn | 38.4% |
 
-The model mean is Paxton +2.2 points, with an intentionally wide 80% interval from Cornyn +8.6 to Paxton +13.0. The wide interval reflects a low-turnout runoff, mixed public polling, sponsor-linked polls, and potential late shocks such as a Trump endorsement.
+The model mean is Paxton +2.6 points, with an intentionally wide 80% interval from Cornyn +8.7 to Paxton +13.8. The wide interval reflects a low-turnout runoff, mixed public polling, sponsor-linked polls, and potential late shocks such as a Trump endorsement.
 
 ## What This Demonstrates
 
@@ -67,14 +67,14 @@ Open `notebooks/tx_gop_senate_runoff_model.ipynb` for the narrative analysis, ch
 
 ## Data Snapshot
 
-As of May 3, 2026:
+As of May 9, 2026:
 
 - March 3 Republican primary: Cornyn 907,416 votes / 41.9%; Paxton 881,192 / 40.7%; Hunt 292,702 / 13.5%.
-- Poll file contains 35 rows: 9 direct post-primary runoff polls, 21 primary polls, and 5 pre-primary Paxton-Cornyn head-to-head/context rows.
-- Core runoff polls include TPOR, PPP, Change Research, Impact Research, Quantus, GQR, Peak Insights, co/efficient, and April TPOR.
-- Expanded signals include McLaughlin second-choice data, Change Research crosstabs, TPOR Hunt-voter transfer, UH/TSU subgroup rows, turnout-market ranges, and general-election/electability polling.
+- Poll file contains 38 rows: 12 direct post-primary runoff polls, 21 primary polls, and 5 pre-primary Paxton-Cornyn head-to-head/context rows.
+- Core runoff polls include TPOR, PPP, Change Research, Impact Research, Quantus, GQR, Peak Insights, co/efficient, University of Houston Hobby School, and Remington Research.
+- Expanded signals include McLaughlin second-choice data, Change Research crosstabs, TPOR and UH Hunt-voter transfer, UH/TSU and UH Hobby subgroup rows, turnout-market ranges, and general-election/electability polling.
 - Market comparison includes Kalshi, Polymarket, TexPolls, and Covers/Kalshi snapshots.
-- Market time series includes timestamp, bid/ask/last where available, normalized implied probabilities, stale-price flags, settlement warnings, and liquidity/volume fields.
+- Market time series includes timestamp, bid/ask/last where available, normalized implied probabilities, stale-price flags, settlement warnings, and liquidity/volume fields, including a May 9 Polymarket API snapshot.
 - Money/media inputs include FEC-style campaign finance reporting from Texas Tribune plus AdImpact ad-spending reporting.
 - County features now cover all 254 Texas counties with TXElectionResults party lean and historical vote-volume context. Candidate-level county results still reconcile through a `statewide_unallocated` placeholder until full official county rows are imported.
 - Poll-miss diagnostics compare final pre-primary polling against the March 3 result, including Cornyn's primary overperformance and a repeat-miss stress test.
@@ -116,12 +116,12 @@ Current limitation: the county turnout framework is structurally ready, but it i
 
 | Scenario | Paxton | Cornyn | Mean Margin |
 | --- | ---: | ---: | ---: |
-| Polling only | 70.9% | 29.1% | Paxton +4.9 |
-| Polling + primary prior | 68.5% | 31.5% | Paxton +4.1 |
-| Full model, mid turnout | 60.2% | 39.8% | Paxton +2.2 |
-| Low turnout | 64.7% | 35.3% | Paxton +3.5 |
-| High turnout | 53.9% | 46.1% | Paxton +1.0 |
-| Repeat primary polling miss | 42.5% | 57.5% | Cornyn +1.8 |
+| Polling only | 72.2% | 27.8% | Paxton +5.4 |
+| Polling + primary prior | 69.8% | 30.2% | Paxton +4.5 |
+| Full model, mid turnout | 61.6% | 38.4% | Paxton +2.6 |
+| Low turnout | 65.8% | 34.2% | Paxton +3.8 |
+| High turnout | 55.7% | 44.3% | Paxton +1.3 |
+| Repeat primary polling miss | 44.3% | 55.7% | Cornyn +1.4 |
 
 ## Source List
 
@@ -144,11 +144,14 @@ Current limitation: the county turnout framework is structurally ready, but it i
 - AP CPAC/Paxton event context: https://apnews.com/article/075d6eff33890921319ac73bd853986b
 - Change Research Texas memo: https://changeresearch.com/wp-content/uploads/2026/03/Texas-Memo-_-March-2026.pdf
 - KERA/TPOR April runoff report: https://www.keranews.org/elections-2026/2026-04-17/paxton-cornyn-poll-republican-primary-runoff-texas-senate-race
+- UH Hobby School May runoff report: https://www.texastribune.org/wp-content/uploads/2026/05/UH-GOP-runoff-poll.pdf
+- Public polling table for late Remington/Peak runoff polls: https://en.wikipedia.org/wiki/2026_United_States_Senate_election_in_Texas
 - Spectrum Hunt-voter report: https://spectrumlocalnews.com/tx/austin/news/2026/04/23/texas-poll-hunt-senate-primary-runoff-senate
 - McLaughlin/DDHQ second-choice data: https://data.ddhq.io/polls/2026/03/01/McLaughlin-%26-Associates-Texas
 - Impact Research/Talarico poll report: https://www.newsmax.com/politics/talarico-texas-senate/2026/03/20/id/1250261/
 - PPP/Senate Majority PAC electability memo: https://senatemajority.com/wp-content/uploads/signal-2026-03-06-122044.pdf
 - TXElectionResults primary turnout/results: https://txelectionresults.com/primaries/2026
+- Polymarket event API: https://gamma-api.polymarket.com/events?slug=texas-republican-senate-primary-winner
 
 ## Refresh Notes
 

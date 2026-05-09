@@ -1,13 +1,13 @@
 shock,paxton_margin_adjustment,sigma_adjustment,probability_note,source_url,notes,last_updated
-trump_endorses_paxton,4.0,1.0,Stress test only; no probability assigned.,https://www.texastribune.org/,Late endorsement shock that could consolidate pro-Paxton voters.,2026-05-03
-trump_endorses_cornyn,-4.0,1.0,Stress test only; no probability assigned.,https://www.texastribune.org/,Late endorsement shock that could consolidate pro-Cornyn institutional support.,2026-05-03
-hunt_endorses_paxton,1.0,0.5,Stress test only; no probability assigned.,https://www.texastribune.org/,Hunt-voter transfer shock toward Paxton.,2026-05-03
-hunt_endorses_cornyn,-1.0,0.5,Stress test only; no probability assigned.,https://www.texastribune.org/,Hunt-voter transfer shock toward Cornyn.,2026-05-03
-major_new_poll_paxton_plus_10,2.0,1.0,Stress test only; no probability assigned.,https://www.realclearpolling.com/,Major public poll shock favoring Paxton.,2026-05-03
-major_new_poll_cornyn_plus_5,-2.0,1.0,Stress test only; no probability assigned.,https://www.realclearpolling.com/,Major public poll shock favoring Cornyn.,2026-05-03
-major_legal_or_campaign_event,0.0,2.0,Stress test only; no probability assigned.,https://www.texastribune.org/,Variance shock for a material campaign or legal event.,2026-05-03
-repeat_primary_poll_error,-2.5,1.0,Stress test only; no probability assigned.,https://www.270towin.com/2026-senate-polls/texas,Applies a conservative repeat of the March primary polling miss toward Cornyn.,2026-05-03
-turnout_collapse_paxton_base,2.5,1.0,Stress test only; no probability assigned.,https://txelectionresults.com/primaries/2026,Low-runoff-turnout shock with more ideologically intense primary voters.,2026-05-03
-turnout_surge_cornyn_base,-2.5,1.0,Stress test only; no probability assigned.,https://txelectionresults.com/primaries/2026,High-runoff-turnout shock where Cornyn reaches infrequent or moderate GOP voters.,2026-05-03
-pro_cornyn_money_saturation,-1.5,0.5,Stress test only; no probability assigned.,https://www.texastribune.org/2026/04/15/john-cornyn-ken-paxton-runoff-first-quarter-fundraising/,Stress test for a late paid-media advantage from Cornyn-aligned spending.,2026-05-03
-market_liquidity_shock,0.0,1.5,Stress test only; no probability assigned.,https://docs.kalshi.com/getting_started,Variance shock for stale or thin prediction-market pricing rather than candidate fundamentals.,2026-05-03
+trump_endorses_paxton,4.0,1.0,Stress test only; no probability assigned.,https://www.texastribune.org/,Late endorsement shock that could consolidate pro-Paxton voters.,2026-05-09
+trump_endorses_cornyn,-4.0,1.0,Stress test only; no probability assigned.,https://www.texastribune.org/,Late endorsement shock that could consolidate pro-Cornyn institutional support.,2026-05-09
+hunt_endorses_paxton,1.0,0.5,Stress test only; no probability assigned.,https://www.texastribune.org/,Hunt-voter transfer shock toward Paxton.,2026-05-09
+hunt_endorses_cornyn,-1.0,0.5,Stress test only; no probability assigned.,https://www.texastribune.org/,Hunt-voter transfer shock toward Cornyn.,2026-05-09
+major_new_poll_paxton_plus_10,2.0,1.0,Stress test only; no probability assigned.,https://www.realclearpolling.com/,Major public poll shock favoring Paxton.,2026-05-09
+major_new_poll_cornyn_plus_5,-2.0,1.0,Stress test only; no probability assigned.,https://www.realclearpolling.com/,Major public poll shock favoring Cornyn.,2026-05-09
+major_legal_or_campaign_event,0.0,2.0,Stress test only; no probability assigned.,https://www.texastribune.org/,Variance shock for a material campaign or legal event.,2026-05-09
+repeat_primary_poll_error,-2.5,1.0,Stress test only; no probability assigned.,https://www.270towin.com/2026-senate-polls/texas,Applies a conservative repeat of the March primary polling miss toward Cornyn.,2026-05-09
+turnout_collapse_paxton_base,2.5,1.0,Stress test only; no probability assigned.,https://txelectionresults.com/primaries/2026,Low-runoff-turnout shock with more ideologically intense primary voters.,2026-05-09
+turnout_surge_cornyn_base,-2.5,1.0,Stress test only; no probability assigned.,https://txelectionresults.com/primaries/2026,High-runoff-turnout shock where Cornyn reaches infrequent or moderate GOP voters.,2026-05-09
+pro_cornyn_money_saturation,-1.5,0.5,Stress test only; no probability assigned.,https://www.texastribune.org/2026/04/15/john-cornyn-ken-paxton-runoff-first-quarter-fundraising/,Stress test for a late paid-media advantage from Cornyn-aligned spending.,2026-05-09
+market_liquidity_shock,0.0,1.5,Stress test only; no probability assigned.,https://docs.kalshi.com/getting_started,Variance shock for stale or thin prediction-market pricing rather than candidate fundamentals.,2026-05-09

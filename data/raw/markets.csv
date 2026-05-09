@@ -5,3 +5,4 @@ Kalshi,2026-03-14,0.55,0.45,,https://texpolls.com/races/us-senate-2026,"TexPolls
 Polymarket,2026-04-18,0.60,0.40,,https://polymarket.com/predictions/cornyn,"Search-result snapshot said market assigned about 60% to Paxton."
 Covers/Kalshi,2026-05-01,0.59,0.41,,https://www.covers.com/politics/texas-senate-odds,"Covers reported Kalshi-traded Paxton at 59 cents / 59% implied probability."
 Polymarket,2026-05-03,0.56,0.42,$15.9M volume,https://polymarket.com/event/texas-republican-senate-primary-winner/will-ken-paxton-win-the-2026-republican-primary,"Live page FAQ listed Paxton 56%, Cornyn 42%, and $15.9M total trading volume; residual probability assigned to other outcomes."
+Polymarket,2026-05-09,0.56,0.42,"$16.0M volume; $122k liquidity",https://gamma-api.polymarket.com/events?slug=texas-republican-senate-primary-winner,"Live Polymarket API snapshot updated 2026-05-09 00:02 UTC; bid/ask captured in market_timeseries."
