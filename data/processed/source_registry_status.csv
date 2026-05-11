@@ -1,5 +1,5 @@
 dataset_name,source_type,retrieval_method,trust_tier,freshness_sla_days,latest_source_date,days_stale,freshness_pass,parse_status,row_count,citation_url,notes,last_updated
-polls,polling_table,manual_public_snapshot,high,3,2026-05-07,2.0,True,ok,38,https://www.270towin.com/2026-senate-polls/texas,Canonical polling input for primary and runoff survey rows.,2026-05-09
+polls,polling_table,manual_public_snapshot,high,3,2026-05-07,2.0,True,ok,39,https://www.270towin.com/2026-senate-polls/texas,Canonical polling input for primary and runoff survey rows.,2026-05-09
 primary_results,official_results,manual_public_snapshot,high,365,,,True,ok,8,https://apps.texastribune.org/features/2026/primary-election-results-2026/,Statewide certified-style result input for first-round baseline.,2026-05-09
 markets,market_reference,manual_public_snapshot,medium,2,2026-05-09,0.0,True,ok,7,https://gamma-api.polymarket.com/events?slug=texas-republican-senate-primary-winner,Headline market comparison table kept separate from the core forecast.,2026-05-09
 market_timeseries,market_orderbook,manual_public_snapshot,medium,1,2026-05-09,0.0,True,ok,7,https://gamma-api.polymarket.com/events?slug=texas-republican-senate-primary-winner,Timestamped market microstructure input for safety-gated betting decisions.,2026-05-09
@@ -9,7 +9,7 @@ hunt_transfer,subgroup_polling,manual_public_snapshot,medium,7,2026-05-05,4.0,Tr
 subgroup_signals,subgroup_polling,manual_public_snapshot,medium,14,2026-05-05,4.0,True,ok,55,https://www.texastribune.org/wp-content/uploads/2026/05/UH-GOP-runoff-poll.pdf,Supporting diagnostics only.,2026-05-09
 candidate_strength,image_polling,manual_public_snapshot,medium,14,2026-05-05,4.0,True,ok,38,https://www.texastribune.org/wp-content/uploads/2026/05/UH-GOP-runoff-poll.pdf,Capped candidate-strength adjustment evidence.,2026-05-09
 turnout_signals,turnout_context,manual_public_snapshot,medium,7,2026-04-27,12.0,False,ok,10,https://txelectionresults.com/primaries/2026,Scenario-context input for turnout conditions.,2026-05-09
-general_election_polls,electability_polling,manual_public_snapshot,low,21,2026-04-29,10.0,True,ok,8,https://www.270towin.com/2026-senate-polls/texas,Secondary contextual evidence not used directly in the runoff polling baseline.,2026-05-09
+general_election_polls,electability_polling,manual_public_snapshot,low,21,2026-04-29,10.0,True,ok,16,https://www.270towin.com/2026-senate-polls/texas,Secondary contextual evidence not used directly in the runoff polling baseline.,2026-05-09
 shock_scenarios,shock_assumptions,manual_curated_policy,medium,30,,,True,ok,12,https://www.texastribune.org/,Policy-controlled stress tests for release gating and no-bet decisions.,2026-05-09
 county_primary_results,official_results,manual_public_snapshot,high,365,2026-03-03,67.0,True,ok,4,https://txelectionresults.com/primaries/2026,County geography should be forecast-eligible only after real county rows are loaded.,2026-05-09
 county_features,county_context,manual_curated_policy,medium,365,,,True,ok,254,https://txelectionresults.com/primaries/2026,County context and retention baselines.,2026-05-09
