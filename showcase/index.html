@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Texas GOP Senate Runoff Forecast</title>
+  <style>
+    :root {
+      --ink: #13212f;
+      --muted: #647080;
+      --line: #d9e0e7;
+      --paper: #f7f9fb;
+      --panel: #ffffff;
+      --navy: #153756;
+      --blue: #2e6f95;
+      --red: #b83a36;
+      --gold: #b8892f;
+      --green: #287a5b;
+      --warn: #9f5d12;
+      --shadow: 0 18px 50px rgba(22, 33, 47, 0.09);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font: 15px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+    .topbar { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: 0.01em; }
+    .mark {
+      width: 34px; height: 34px; border-radius: 8px; color: white; background: var(--navy);
+      display: grid; place-items: center; font-weight: 900;
+    }
+    nav { display: flex; gap: 18px; color: var(--muted); font-size: 13px; }
+    main { padding: 34px 0 60px; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.8fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+    .hero-main { padding: 30px; }
+    .kicker { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+    h1 { margin: 0; font-size: clamp(34px, 5vw, 58px); line-height: 0.98; letter-spacing: 0; max-width: 780px; }
+    h2 { margin: 0 0 16px; font-size: 22px; letter-spacing: 0; }
+    h3 { margin: 0; font-size: 14px; letter-spacing: 0; }
+    .headline-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 28px;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 112px;
+      background: #fbfcfd;
+    }
+    .metric span, .scenario span, .small-label { color: var(--muted); font-size: 12px; display: block; }
+    .metric strong { display: block; font-size: 30px; line-height: 1.1; margin-top: 8px; }
+    .red { color: var(--red); }
+    .blue { color: var(--blue); }
+    .gold { color: var(--gold); }
+    .probability { margin-top: 24px; }
+    .probability-labels { display: flex; justify-content: space-between; font-weight: 750; font-size: 13px; }
+    .probability-track {
+      height: 18px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--red) 0 60.78%, var(--blue) 60.78% 100%);
+      margin: 8px 0;
+      border: 1px solid rgba(19, 33, 47, 0.16);
+    }
+    .health { padding: 22px; display: flex; flex-direction: column; gap: 13px; }
+    .health-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+    .health-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .pill.ok { color: var(--green); background: #e8f5ee; }
+    .pill.warn { color: var(--warn); background: #fff3de; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 22px; }
+    .section { margin-top: 22px; padding: 24px; }
+    .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    .section-title p { margin: 0; color: var(--muted); font-size: 13px; }
+    .scenarios { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .scenario {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px;
+      background: #fbfcfd;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .scenario p { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+    .scenario-metric strong { font-size: 22px; }
+    .mini-bar, .table-bar { height: 8px; border-radius: 999px; background: #e5ebf0; overflow: hidden; }
+    .mini-bar span, .table-bar span { display: block; height: 100%; background: var(--red); }
+    .scenario footer { color: var(--muted); font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .method {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .method div { border-left: 3px solid var(--gold); padding: 4px 0 4px 12px; }
+    .method p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .footer-note { margin: 22px 0 0; color: var(--muted); font-size: 12px; }
+    @media (max-width: 920px) {
+      .wrap { max-width: 390px; }
+      .hero, .grid-2 { grid-template-columns: 1fr; }
+      .headline-grid, .scenarios, .method { grid-template-columns: 1fr; }
+      nav { display: none; }
+      .hero-main { padding: 22px; }
+    }
+    @media (max-width: 520px) {
+      .wrap { padding: 0 16px; max-width: 100%; }
+      main { padding-top: 22px; }
+      .topbar { gap: 10px; }
+      .brand { min-width: 0; font-size: 14px; }
+      .brand span { overflow-wrap: anywhere; line-height: 1.2; }
+      .hero-main, .health { max-width: calc(100vw - 32px); overflow: hidden; }
+      h1 { max-width: 310px; font-size: 25px; line-height: 1.08; overflow-wrap: anywhere; word-break: break-word; }
+      .headline-grid, .probability, .metric { max-width: 310px; }
+      .metric { min-height: 0; }
+      .probability-labels { display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 12px; }
+      .probability-labels span:last-child { text-align: left; }
+      .probability-track { width: 100%; max-width: 310px; }
+      .small-label { max-width: 310px; white-space: normal; overflow-wrap: anywhere; }
+      .health-row { align-items: flex-start; flex-direction: column; gap: 4px; }
+      .section { padding: 18px; }
+      .section-title { display: block; }
+      table { display: block; overflow-x: auto; white-space: nowrap; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap topbar">
+      <div class="brand"><div class="mark">TX</div><span>Texas GOP Senate Runoff Forecast</span></div>
+      <nav aria-label="Dashboard sections">
+        <span>Forecast</span><span>Scenarios</span><span>Audit</span><span>Method</span>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="wrap">
+      <section class="hero">
+        <div class="panel hero-main">
+          <p class="kicker">As of 2026-05-12 | May 26, 2026 Republican runoff</p>
+          <h1>Paxton leads, but the forecast remains source-gated.</h1>
+          <div class="headline-grid">
+            <div class="metric"><span>Ken Paxton fair probability</span><strong class="red">60.8%</strong></div>
+            <div class="metric"><span>John Cornyn fair probability</span><strong class="blue">39.2%</strong></div>
+            <div class="metric"><span>Mean margin</span><strong class="gold">+2.3 pts</strong></div>
+          </div>
+          <div class="probability">
+            <div class="probability-labels"><span>Paxton 60.8%</span><span>Cornyn 39.2%</span></div>
+            <div class="probability-track" aria-label="Forecast probability bar"></div>
+            <p class="small-label">80% margin interval: -8.6 to +13.3 points. Forecast status: withheld.</p>
+          </div>
+        </div>
+        <aside class="panel health">
+          <div class="health-row"><span>Release status</span><span class="pill warn">Withheld</span></div>
+          <div class="health-row"><span>Reliability</span><strong>32/100 | Low</strong></div>
+          <div class="health-row"><span>Source freshness</span><strong>17/17 pass</strong></div>
+          <div class="health-row"><span>County coverage</span><strong>0%</strong></div>
+          <div class="health-row"><span>Effective poll count</span><strong>7.9</strong></div>
+          <div class="health-row"><span>Mid-turnout prior</span><strong>1,083,455 votes</strong></div>
+        </aside>
+      </section>
+
+      <section class="panel section">
+        <div class="section-title">
+          <h2>Scenario Range</h2>
+          <p>Professional forecast, not a single-point promise.</p>
+        </div>
+        <div class="scenarios">
+            <article class="scenario">
+              <div>
+                <h3>Polling Only</h3>
+                <p>Only post-primary direct runoff polls.</p>
+              </div>
+              <div class="scenario-metric">
+                <strong>71.7%</strong>
+                <span>Paxton win probability</span>
+              </div>
+              <div class="mini-bar" aria-hidden="true"><span style="width:71.70%"></span></div>
+              <footer>+5.2 pt mean margin</footer>
+            </article>
+            
+
+            <article class="scenario">
+              <div>
+                <h3>Polling Plus Primary</h3>
+                <p>Runoff polls blended with first-round result plus Hunt transfer evidence.</p>
+              </div>
+              <div class="scenario-metric">
+                <strong>69.1%</strong>
+                <span>Paxton win probability</span>
+              </div>
+              <div class="mini-bar" aria-hidden="true"><span style="width:69.09%"></span></div>
+              <footer>+4.3 pt mean margin</footer>
+            </article>
+            
+
+            <article class="scenario">
+              <div>
+                <h3>Full Model Mid Turnout</h3>
+                <p>Core estimate: polls, primary prior, Paxton enthusiasm, and Cornyn money/media edge.</p>
+              </div>
+              <div class="scenario-metric">
+                <strong>60.8%</strong>
+                <span>Paxton win probability</span>
+              </div>
+              <div class="mini-bar" aria-hidden="true"><span style="width:60.78%"></span></div>
+              <footer>+2.3 pt mean margin</footer>
+            </article>
+            
+
+            <article class="scenario">
+              <div>
+                <h3>Low Turnout</h3>
+                <p>Lower-turnout runoff scenario; about 758,418 projected voters.</p>
+              </div>
+              <div class="scenario-metric">
+                <strong>65.0%</strong>
+                <span>Paxton win probability</span>
+              </div>
+              <div class="mini-bar" aria-hidden="true"><span style="width:64.99%"></span></div>
+              <footer>+3.6 pt mean margin</footer>
+            </article>
+            
+
+            <article class="scenario">
+              <div>
+                <h3>High Turnout</h3>
+                <p>Higher-turnout runoff scenario; about 1,408,492 projected voters.</p>
+              </div>
+              <div class="scenario-metric">
+                <strong>54.5%</strong>
+                <span>Paxton win probability</span>
+              </div>
+              <div class="mini-bar" aria-hidden="true"><span style="width:54.52%"></span></div>
+              <footer>+1.1 pt mean margin</footer>
+            </article>
+            
+
+            <article class="scenario">
+              <div>
+                <h3>Repeat Primary Poll Error</h3>
+                <p>Stress test only: applies half of the March primary polling-margin miss toward Cornyn.</p>
+              </div>
+              <div class="scenario-metric">
+                <strong>42.5%</strong>
+                <span>Paxton win probability</span>
+              </div>
+              <div class="mini-bar" aria-hidden="true"><span style="width:42.49%"></span></div>
+              <footer>-1.8 pt mean margin</footer>
+            </article>
+            </div>
+      </section>
+
+      <section class="grid-2">
+        <div class="panel section">
+          <div class="section-title"><h2>Sensitivity</h2><p>Largest shifts when a pollster is removed.</p></div>
+          <table>
+            <thead><tr><th>Removed</th><th>Paxton</th><th>Margin</th><th>Bar</th></tr></thead>
+            <tbody>
+            <tr>
+              <td>Peak Insights</td>
+              <td>65.5%</td>
+              <td>+3.3 pts</td>
+              <td><div class="table-bar"><span style="width:65.50%"></span></div></td>
+            </tr>
+            
+
+            <tr>
+              <td>Remington Research Group</td>
+              <td>56.7%</td>
+              <td>+1.3 pts</td>
+              <td><div class="table-bar"><span style="width:56.66%"></span></div></td>
+            </tr>
+            
+
+            <tr>
+              <td>co/efficient</td>
+              <td>64.2%</td>
+              <td>+3.0 pts</td>
+              <td><div class="table-bar"><span style="width:64.24%"></span></div></td>
+            </tr>
+            
+
+            <tr>
+              <td>Texas Public Opinion Research</td>
+              <td>58.5%</td>
+              <td>+1.9 pts</td>
+              <td><div class="table-bar"><span style="width:58.49%"></span></div></td>
+            </tr>
+            
+
+            <tr>
+              <td>University of Houston Hobby School</td>
+              <td>62.0%</td>
+              <td>+2.8 pts</td>
+              <td><div class="table-bar"><span style="width:61.97%"></span></div></td>
+            </tr>
+            
+
+            <tr>
+              <td>all partisan/internal core polls</td>
+              <td>59.8%</td>
+              <td>+1.6 pts</td>
+              <td><div class="table-bar"><span style="width:59.76%"></span></div></td>
+            </tr>
+            
+
+            <tr>
+              <td>Quantus Insights</td>
+              <td>59.9%</td>
+              <td>+2.2 pts</td>
+              <td><div class="table-bar"><span style="width:59.87%"></span></div></td>
+            </tr>
+            
+
+            <tr>
+              <td>Impact Research</td>
+              <td>60.0%</td>
+              <td>+2.1 pts</td>
+              <td><div class="table-bar"><span style="width:59.99%"></span></div></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel section">
+          <div class="section-title"><h2>Ablation</h2><p>How each model layer changes the forecast.</p></div>
+          <table>
+            <thead><tr><th>Layer</th><th>Margin</th><th>Paxton</th><th>Note</th></tr></thead>
+            <tbody>
+            <tr>
+              <td>Polling Only Component</td>
+              <td>+5.2 pts</td>
+              <td>72.9%</td>
+              <td>Polling baseline only.</td>
+            </tr>
+            
+
+            <tr>
+              <td>Plus Primary Transfer Prior</td>
+              <td>+4.3 pts</td>
+              <td>69.1%</td>
+              <td>Adds transfer prior blend.</td>
+            </tr>
+            
+
+            <tr>
+              <td>Plus Top Two Primary Structure</td>
+              <td>+3.8 pts</td>
+              <td>67.1%</td>
+              <td>Adds top-two primary structural prior.</td>
+            </tr>
+            
+
+            <tr>
+              <td>Plus Candidate Strength</td>
+              <td>+4.2 pts</td>
+              <td>69.0%</td>
+              <td>Adds bounded candidate-strength adjustment.</td>
+            </tr>
+            
+
+            <tr>
+              <td>Plus Money Media</td>
+              <td>+2.3 pts</td>
+              <td>60.8%</td>
+              <td>Adds bounded money/media adjustment.</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="grid-2">
+        <div class="panel section">
+          <div class="section-title"><h2>Source Audit</h2><p>Freshness can pass via source check when no new data exists.</p></div>
+          <table>
+            <thead><tr><th>Dataset</th><th>Status</th><th>Basis</th><th>Latest data</th><th>Checked</th></tr></thead>
+            <tbody>
+            <tr>
+              <td>county_primary_results</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>latest_source_data</td>
+              <td>2026-03-03</td>
+              <td>2026-05-12</td>
+            </tr>
+            
+
+            <tr>
+              <td>early_vote_turnout</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>source_check</td>
+              <td>2026-05-03</td>
+              <td>2026-05-12</td>
+            </tr>
+            
+
+            <tr>
+              <td>polls</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>source_check</td>
+              <td>2026-05-07</td>
+              <td>2026-05-12</td>
+            </tr>
+            
+
+            <tr>
+              <td>primary_results</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>source_check</td>
+              <td>nan</td>
+              <td>2026-05-12</td>
+            </tr>
+            
+
+            <tr>
+              <td>source_checks</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>latest_source_data</td>
+              <td>2026-05-12</td>
+              <td>nan</td>
+            </tr>
+            
+
+            <tr>
+              <td>wager_settings</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>latest_source_data</td>
+              <td>nan</td>
+              <td>nan</td>
+            </tr>
+            
+
+            <tr>
+              <td>general_election_polls</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>latest_source_data</td>
+              <td>2026-04-29</td>
+              <td>nan</td>
+            </tr>
+            
+
+            <tr>
+              <td>candidate_strength</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>latest_source_data</td>
+              <td>2026-05-05</td>
+              <td>nan</td>
+            </tr>
+            
+
+            <tr>
+              <td>county_features</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>latest_source_data</td>
+              <td>nan</td>
+              <td>nan</td>
+            </tr>
+            
+
+            <tr>
+              <td>endorsements_events</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>source_check</td>
+              <td>2026-05-01</td>
+              <td>2026-05-12</td>
+            </tr>
+            
+
+            <tr>
+              <td>finance_ads</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>latest_source_data</td>
+              <td>2026-05-06</td>
+              <td>2026-05-12</td>
+            </tr>
+            
+
+            <tr>
+              <td>hunt_transfer</td>
+              <td><span class="pill ok">Pass</span></td>
+              <td>latest_source_data</td>
+              <td>2026-05-05</td>
+              <td>nan</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel section">
+          <div class="section-title"><h2>Market Comparison</h2><p>Research-only; excluded from the core model.</p></div>
+          <table>
+            <thead><tr><th>Platform</th><th>Flag</th><th>Buy price</th><th>Model</th><th>Blocks</th></tr></thead>
+            <tbody>
+            <tr>
+              <td>Kalshi</td>
+              <td>no_bet_zone</td>
+              <td>55.0%</td>
+              <td>60.8%</td>
+              <td>edge_below_required_buffer;edge_not_durable_across_scenarios;forecast_withheld;liquidity_unknown;stale_market_price;verify_contract_terms</td>
+            </tr>
+            
+
+            <tr>
+              <td>Covers</td>
+              <td>no_bet_zone</td>
+              <td>59.0%</td>
+              <td>60.8%</td>
+              <td>edge_below_required_buffer;edge_not_durable_across_scenarios;forecast_withheld;liquidity_unknown;stale_market_price;verify_contract_terms</td>
+            </tr>
+            
+
+            <tr>
+              <td>Polymarket</td>
+              <td>no_bet_zone</td>
+              <td>59.0%</td>
+              <td>60.8%</td>
+              <td>edge_below_required_buffer;edge_not_durable_across_scenarios;forecast_withheld</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel section">
+        <div class="section-title">
+          <h2>Methodology</h2>
+          <p>Every adjustment is bounded and auditable.</p>
+        </div>
+        <div class="method">
+          <div><h3>Polling</h3><p>Recency, sample, LV, partisan, and internal-cluster weighting.</p></div>
+          <div><h3>Primary Prior</h3><p>First-round vote baseline plus Hunt-transfer evidence; baseline Hunt-to-Paxton transfer is 59.1%.</p></div>
+          <div><h3>Turnout</h3><p>Low/mid/high retention scenarios stay explicit until early voting starts on May 18.</p></div>
+          <div><h3>Release Gates</h3><p>Historical calibration limits reduce reliability, while current source, duplicate, and county gates control publication.</p></div>
+        </div>
+        <p class="footer-note">Generated from data/processed/model_output.json and companion CSVs. This is election-forecasting research, not financial advice.</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

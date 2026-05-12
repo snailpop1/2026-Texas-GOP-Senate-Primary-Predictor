@@ -1,0 +1,4 @@
+scenario,hunt_unresolved_to_paxton_assumption,paxton_transfer_share,cornyn_transfer_share,primary_transfer_prior_margin_points,notes,last_updated
+cornyn_resolves_undecided,0.45,0.5742324593449543,0.42576754065504574,0.5408317560865896,More unresolved Hunt voters break toward Cornyn.,2026-05-12
+baseline,0.55,0.5912984919645693,0.4087015080354307,1.0027442550553474,Default assumption: unresolved Hunt voters lean slightly Paxton.,2026-05-12
+paxton_resolves_undecided,0.65,0.6083645245841841,0.3916354754158159,1.4646567540241193,More unresolved Hunt voters break toward Paxton.,2026-05-12

@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
 import pandas as pd
 
 from scripts.build_dataset import AS_OF, main
+from scripts.build_showcase import main as build_showcase
 
 
 RAW_DIR = ROOT / "data" / "raw"
@@ -64,9 +65,9 @@ def test_primary_results_reconcile_to_source_totals() -> None:
     statewide = primary[primary["statewide_or_county"] == "statewide"]
     votes = dict(zip(statewide["candidate"], statewide["votes"]))
 
-    assert votes["John Cornyn"] == 907_416
-    assert votes["Ken Paxton"] == 881_192
-    assert votes["Wesley Hunt"] == 292_702
+    assert votes["John Cornyn"] == 910_382
+    assert votes["Ken Paxton"] == 878_564
+    assert votes["Wesley Hunt"] == 293_250
     assert 99.5 < statewide["pct"].sum() < 100.5
 
 
@@ -125,6 +126,9 @@ def test_required_processed_outputs_exist() -> None:
         "county_primary_results.csv",
         "county_features.csv",
         "early_vote_turnout.csv",
+        "source_checks.csv",
+        "turnout_prior.csv",
+        "hunt_transfer_scenarios.csv",
         "model_scenarios.csv",
         "market_comparison.csv",
         "wager_value_table.csv",
@@ -146,6 +150,7 @@ def test_required_processed_outputs_exist() -> None:
         "snapshot_manifest.csv",
         "model_output.json",
         "audit_report.md",
+        "model_card.md",
     ]
     for filename in required_files:
         path = PROCESSED_DIR / filename
@@ -161,6 +166,7 @@ def test_required_processed_outputs_exist() -> None:
     assert "calibration_metrics" in output
     assert "source_freshness" in output
     assert "betting_decision_summary" in output
+    assert "scenario_range" in output
 
 
 def test_processed_csvs_include_last_updated() -> None:
@@ -223,13 +229,24 @@ def test_release_and_calibration_outputs_reflect_withholding() -> None:
     assert not row["forecast_publishable"]
     assert not row["betting_eligible"]
     assert "county_coverage_incomplete" in row["blocking_issues"]
+    assert "historical_brier_score" not in row["blocking_issues"]
+    assert "historical_brier_score" in row["reliability_penalties"]
 
     calibration = pd.read_csv(PROCESSED_DIR / "calibration_summary.csv")
     assert {"metric", "threshold", "pass", "status"}.issubset(calibration.columns)
     assert (calibration["status"] == "insufficient_history").any()
 
     source_status = pd.read_csv(PROCESSED_DIR / "source_registry_status.csv")
-    assert {"dataset_name", "freshness_pass", "parse_status"}.issubset(source_status.columns)
+    assert {
+        "dataset_name",
+        "freshness_pass",
+        "parse_status",
+        "freshness_basis",
+        "latest_source_check_date",
+    }.issubset(source_status.columns)
+    polls = source_status[source_status["dataset_name"] == "polls"].iloc[0]
+    assert polls["freshness_pass"]
+    assert polls["freshness_basis"] == "source_check"
 
 
 def test_poll_miss_and_early_vote_layers_are_explicit() -> None:
@@ -245,6 +262,34 @@ def test_poll_miss_and_early_vote_layers_are_explicit() -> None:
     projection = pd.read_csv(PROCESSED_DIR / "runoff_county_projection.csv")
     assert set(projection["scenario"]) == {"low", "mid", "high"}
     assert not projection["early_vote_available"].any()
+
+
+def test_poll_clustering_and_auxiliary_model_outputs() -> None:
+    main()
+    polls = pd.read_csv(PROCESSED_DIR / "polls.csv")
+    assert {"poll_cluster_id", "cluster_size", "cluster_weight", "sponsor_alignment"}.issubset(polls.columns)
+    assert (polls.loc[polls["cluster_size"] > 1, "cluster_weight"] < 1).all()
+
+    turnout = pd.read_csv(PROCESSED_DIR / "turnout_prior.csv")
+    assert set(turnout["scenario"]) == {"low_turnout", "mid_turnout", "high_turnout"}
+    assert (turnout["projected_runoff_votes"] > 0).all()
+
+    hunt = pd.read_csv(PROCESSED_DIR / "hunt_transfer_scenarios.csv")
+    assert set(hunt["scenario"]) == {"cornyn_resolves_undecided", "baseline", "paxton_resolves_undecided"}
+    assert hunt["paxton_transfer_share"].between(0, 1).all()
+
+
+def test_as_of_build_is_deterministic_and_showcase_exists() -> None:
+    first = main(as_of="2026-05-12")["forecast_package"]["headline_forecast"]
+    second = main(as_of="2026-05-12")["forecast_package"]["headline_forecast"]
+    assert first == second
+
+    build_showcase()
+    showcase = ROOT / "showcase" / "index.html"
+    assert showcase.exists()
+    text = showcase.read_text(encoding="utf-8")
+    assert "Texas GOP Senate Runoff Forecast" in text
+    assert "Paxton leads" in text
 
 
 if __name__ == "__main__":

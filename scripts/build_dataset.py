@@ -17,12 +17,23 @@ ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
 SNAPSHOT_DIR = ROOT / "data" / "snapshots"
-AS_OF = pd.Timestamp("2026-05-09")
+DEFAULT_AS_OF = pd.Timestamp("2026-05-12")
+AS_OF = DEFAULT_AS_OF
 RUNOFF_ELECTION_DATE = pd.Timestamp("2026-05-26")
 EARLY_VOTE_START = pd.Timestamp("2026-05-18")
 STALE_MARKET_DAYS = 2
-RNG_SEED = 20260509
+RNG_SEED = int(DEFAULT_AS_OF.strftime("%Y%m%d"))
 FORECAST_PACKAGE_VERSION = "2.0"
+
+
+def configure_run(as_of: object | None = None) -> pd.Timestamp:
+    global AS_OF, RNG_SEED
+    if as_of is None:
+        AS_OF = DEFAULT_AS_OF
+    else:
+        AS_OF = pd.Timestamp(as_of).normalize()
+    RNG_SEED = int(AS_OF.strftime("%Y%m%d"))
+    return AS_OF
 
 
 def read_raw() -> Dict[str, pd.DataFrame]:
@@ -43,6 +54,7 @@ def read_raw() -> Dict[str, pd.DataFrame]:
         "county_primary_results": pd.read_csv(RAW_DIR / "county_primary_results.csv"),
         "county_features": pd.read_csv(RAW_DIR / "county_features.csv"),
         "early_vote_turnout": pd.read_csv(RAW_DIR / "early_vote_turnout.csv"),
+        "source_checks": pd.read_csv(RAW_DIR / "source_checks.csv"),
         "source_registry": pd.read_csv(RAW_DIR / "source_registry.csv"),
     }
 
@@ -67,6 +79,32 @@ def latest_date_value(frame: pd.DataFrame, columns: Iterable[str]) -> str:
     if not dates:
         return ""
     return str(max(dates).date())
+
+
+def latest_source_check(raw: Dict[str, pd.DataFrame], dataset_name: str) -> pd.Series | None:
+    checks = raw.get("source_checks")
+    if checks is None or checks.empty:
+        return None
+    dataset_checks = checks[checks["dataset_name"].astype(str).eq(dataset_name)].copy()
+    if dataset_checks.empty:
+        return None
+    dataset_checks["check_date"] = pd.to_datetime(dataset_checks["check_date"], errors="coerce")
+    dataset_checks = dataset_checks.dropna(subset=["check_date"]).sort_values("check_date")
+    if dataset_checks.empty:
+        return None
+    return dataset_checks.iloc[-1]
+
+
+def source_check_freshness(raw: Dict[str, pd.DataFrame], dataset_name: str) -> Tuple[str, int | None, str]:
+    check = latest_source_check(raw, dataset_name)
+    if check is None:
+        return "", None, ""
+    check_date = pd.Timestamp(check["check_date"])
+    return (
+        str(check_date.date()),
+        int((AS_OF - check_date).days),
+        str(check.get("check_result", "")),
+    )
 
 
 def setting_value(settings: pd.Series, name: str, default: float) -> float:
@@ -136,9 +174,9 @@ def validate_primary_results(primary: pd.DataFrame) -> None:
     require_columns(primary, ["candidate", "votes", "pct"], "primary_results")
     statewide = primary[primary["statewide_or_county"] == "statewide"].copy()
     expected_votes = {
-        "John Cornyn": 907416,
-        "Ken Paxton": 881192,
-        "Wesley Hunt": 292702,
+        "John Cornyn": 910382,
+        "Ken Paxton": 878564,
+        "Wesley Hunt": 293250,
     }
     for candidate, votes in expected_votes.items():
         actual = int(statewide.loc[statewide["candidate"] == candidate, "votes"].iloc[0])
@@ -241,6 +279,25 @@ def process_polls(polls: pd.DataFrame, as_of: pd.Timestamp = AS_OF) -> pd.DataFr
         + "|"
         + out["population"].astype(str).str.strip().str.upper()
     )
+    sponsor_text = out["sponsor"].fillna("").astype(str).str.lower()
+    out["sponsor_alignment"] = np.select(
+        [
+            sponsor_text.str.contains("cornyn|nrsc|conservative majority", regex=True),
+            sponsor_text.str.contains("paxton|lone star liberty", regex=True),
+            out["partisan_or_internal"].map(to_bool),
+        ],
+        ["pro_cornyn", "pro_paxton", "sponsor_linked"],
+        default="public",
+    )
+    out["poll_cluster_id"] = out["canonical_poll_id"]
+    internal_core = out["model_group"].eq("core") & out["partisan_or_internal"].map(to_bool)
+    out.loc[internal_core, "poll_cluster_id"] = (
+        "internal_release|"
+        + out.loc[internal_core, "release_date"].dt.strftime("%Y-%m-%d")
+    )
+    cluster_sizes = out.groupby("poll_cluster_id")["poll_cluster_id"].transform("size")
+    out["cluster_size"] = np.where(out["model_group"].eq("core"), cluster_sizes, 1)
+    out["cluster_weight"] = 1.0 / np.sqrt(out["cluster_size"].astype(float))
 
     recency_half_life_days = 21.0
     out["recency_weight"] = np.exp(-np.log(2) * out["days_old"] / recency_half_life_days)
@@ -248,7 +305,11 @@ def process_polls(polls: pd.DataFrame, as_of: pd.Timestamp = AS_OF) -> pd.DataFr
     out["population_weight"] = np.where(out["population"].str.upper().eq("LV"), 1.0, 0.75)
     out["partisan_weight"] = np.where(out["partisan_or_internal"].map(to_bool), 0.70, 1.0)
     out["model_weight"] = (
-        out["recency_weight"] * out["sample_weight"] * out["population_weight"] * out["partisan_weight"]
+        out["recency_weight"]
+        * out["sample_weight"]
+        * out["population_weight"]
+        * out["partisan_weight"]
+        * out["cluster_weight"]
     )
     return out
 
@@ -349,14 +410,16 @@ def process_early_vote_turnout(early_vote: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def aggregate_hunt_transfer(hunt_transfer: pd.DataFrame) -> Dict[str, float]:
+def aggregate_hunt_transfer(
+    hunt_transfer: pd.DataFrame,
+    unresolved_to_paxton: float = 0.55,
+) -> Dict[str, float]:
     usable = hunt_transfer[hunt_transfer["model_weight"] > 0].copy()
     paxton_pct = weighted_mean(usable["paxton_pct"], usable["model_weight"])
     cornyn_pct = weighted_mean(usable["cornyn_pct"], usable["model_weight"])
     undecided_pct = weighted_mean(usable["undecided_other_pct"], usable["model_weight"])
     explicit_two_way = weighted_mean(usable["explicit_two_candidate_paxton_share"], usable["model_weight"])
 
-    unresolved_to_paxton = 0.55
     paxton_transfer = paxton_pct + unresolved_to_paxton * undecided_pct
     cornyn_transfer = cornyn_pct + (1.0 - unresolved_to_paxton) * undecided_pct
     total = paxton_transfer + cornyn_transfer
@@ -373,13 +436,17 @@ def aggregate_hunt_transfer(hunt_transfer: pd.DataFrame) -> Dict[str, float]:
     }
 
 
-def primary_transfer_prior(primary: pd.DataFrame, hunt_transfer: pd.DataFrame) -> Dict[str, float]:
+def primary_transfer_prior(
+    primary: pd.DataFrame,
+    hunt_transfer: pd.DataFrame,
+    unresolved_to_paxton: float = 0.55,
+) -> Dict[str, float]:
     statewide = primary[primary["statewide_or_county"] == "statewide"].copy()
     votes = dict(zip(statewide["candidate"], statewide["votes"]))
     paxton = votes["Ken Paxton"]
     cornyn = votes["John Cornyn"]
     hunt = votes["Wesley Hunt"]
-    transfer = aggregate_hunt_transfer(hunt_transfer)
+    transfer = aggregate_hunt_transfer(hunt_transfer, unresolved_to_paxton=unresolved_to_paxton)
     minor = statewide.loc[
         ~statewide["candidate"].isin(["Ken Paxton", "John Cornyn", "Wesley Hunt"]), "votes"
     ].sum()
@@ -392,6 +459,55 @@ def primary_transfer_prior(primary: pd.DataFrame, hunt_transfer: pd.DataFrame) -
         "top_two_primary_margin": float(200 * (paxton / (paxton + cornyn)) - 100),
         **transfer,
     }
+
+
+def build_hunt_transfer_scenarios(primary: pd.DataFrame, hunt_transfer: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    for scenario, unresolved_share, note in [
+        ("cornyn_resolves_undecided", 0.45, "More unresolved Hunt voters break toward Cornyn."),
+        ("baseline", 0.55, "Default assumption: unresolved Hunt voters lean slightly Paxton."),
+        ("paxton_resolves_undecided", 0.65, "More unresolved Hunt voters break toward Paxton."),
+    ]:
+        prior = primary_transfer_prior(primary, hunt_transfer, unresolved_to_paxton=unresolved_share)
+        rows.append(
+            {
+                "scenario": scenario,
+                "hunt_unresolved_to_paxton_assumption": unresolved_share,
+                "paxton_transfer_share": prior["hunt_final_paxton_transfer_share"],
+                "cornyn_transfer_share": prior["hunt_final_cornyn_transfer_share"],
+                "primary_transfer_prior_margin_points": prior["two_candidate_margin"],
+                "notes": note,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def build_turnout_prior(turnout_signals: pd.DataFrame, primary: pd.DataFrame) -> pd.DataFrame:
+    statewide = primary[primary["statewide_or_county"].eq("statewide")].copy()
+    primary_votes = float(statewide["votes"].sum())
+    gop_ballots = turnout_signals.loc[
+        turnout_signals["metric"].eq("gop_ballots"), "value"
+    ]
+    if not gop_ballots.empty and pd.notna(gop_ballots.iloc[-1]):
+        primary_votes = float(gop_ballots.iloc[-1])
+
+    rows = []
+    for scenario, retention, margin_adjustment, note in [
+        ("low_turnout", 0.35, 1.25, "Lower-turnout runoff; more ideological repeat voters."),
+        ("mid_turnout", 0.50, 0.00, "Central retention assumption before early-vote data starts."),
+        ("high_turnout", 0.65, -1.25, "Higher-turnout runoff; broader GOP electorate helps Cornyn."),
+    ]:
+        rows.append(
+            {
+                "scenario": scenario,
+                "primary_gop_votes": primary_votes,
+                "runoff_retention_rate": retention,
+                "projected_runoff_votes": primary_votes * retention,
+                "paxton_margin_adjustment_points": margin_adjustment,
+                "notes": note,
+            }
+        )
+    return pd.DataFrame(rows)
 
 
 def candidate_strength_adjustment(candidate_strength: pd.DataFrame) -> Dict[str, float]:
@@ -481,6 +597,7 @@ def build_scenarios(
     finance_ads: pd.DataFrame,
     hunt_transfer: pd.DataFrame,
     candidate_strength: pd.DataFrame,
+    turnout_prior: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, Dict[str, float]]:
     core = polls[polls["model_group"] == "core"].copy()
     poll_margin = weighted_mean(core["two_candidate_margin"], core["model_weight"])
@@ -504,6 +621,10 @@ def build_scenarios(
         if not poll_miss.empty
         else 0.0
     )
+    turnout_adjustments = dict(
+        zip(turnout_prior["scenario"], turnout_prior["paxton_margin_adjustment_points"])
+    )
+    turnout_votes = dict(zip(turnout_prior["scenario"], turnout_prior["projected_runoff_votes"]))
 
     scenario_specs = [
         ("polling_only", poll_margin, base_sigma + 0.5, "Only post-primary direct runoff polls."),
@@ -521,15 +642,15 @@ def build_scenarios(
         ),
         (
             "low_turnout",
-            full_margin + 1.25,
+            full_margin + float(turnout_adjustments.get("low_turnout", 1.25)),
             base_sigma + 0.75,
-            "Lower-turnout runoff scenario; assumes more ideologically intense electorate.",
+            f"Lower-turnout runoff scenario; about {turnout_votes.get('low_turnout', 0):,.0f} projected voters.",
         ),
         (
             "high_turnout",
-            full_margin - 1.25,
+            full_margin + float(turnout_adjustments.get("high_turnout", -1.25)),
             base_sigma + 0.75,
-            "Higher-turnout runoff scenario; assumes Cornyn reaches more infrequent/moderate GOP voters.",
+            f"Higher-turnout runoff scenario; about {turnout_votes.get('high_turnout', 0):,.0f} projected voters.",
         ),
         (
             "repeat_primary_poll_error",
@@ -565,6 +686,9 @@ def build_scenarios(
         "primary_transfer_prior_margin_points": prior["two_candidate_margin"],
         "top_two_primary_margin_points": prior["top_two_primary_margin"],
         "repeat_primary_poll_error_margin_adjustment": repeat_miss_adjustment,
+        "mid_turnout_projected_votes": float(turnout_votes.get("mid_turnout", np.nan)),
+        "low_turnout_margin_adjustment": float(turnout_adjustments.get("low_turnout", np.nan)),
+        "high_turnout_margin_adjustment": float(turnout_adjustments.get("high_turnout", np.nan)),
         **{key: value for key, value in prior.items() if key.startswith("hunt_")},
         **strength,
         **money,
@@ -735,7 +859,12 @@ def build_poll_diagnostics(polls: pd.DataFrame) -> pd.DataFrame:
         {
             "diagnostic": "effective_poll_count",
             "value": eff_n,
-            "notes": "Weight-adjusted poll count after recency, sample, population, and partisan penalties.",
+            "notes": "Weight-adjusted poll count after recency, sample, population, partisan, and same-day internal clustering penalties.",
+        },
+        {
+            "diagnostic": "clustered_internal_core_poll_count",
+            "value": float(core[core["cluster_size"] > 1]["poll_cluster_id"].nunique()),
+            "notes": "Count of same-release-date internal poll clusters downweighted to avoid double-counting sponsor-linked bursts.",
         },
         {
             "diagnostic": "weighted_mean_paxton_margin",
@@ -840,6 +969,7 @@ def build_sensitivity(
     finance_ads: pd.DataFrame,
     hunt_transfer: pd.DataFrame,
     candidate_strength: pd.DataFrame,
+    turnout_prior: pd.DataFrame,
 ) -> pd.DataFrame:
     core = polls[polls["model_group"] == "core"].copy()
     rows = []
@@ -847,7 +977,7 @@ def build_sensitivity(
         reduced = polls[~((polls["model_group"] == "core") & (polls["pollster"] == pollster))].copy()
         if len(reduced[reduced["model_group"] == "core"]) < 3:
             continue
-        scenarios, _ = build_scenarios(reduced, primary, finance_ads, hunt_transfer, candidate_strength)
+        scenarios, _ = build_scenarios(reduced, primary, finance_ads, hunt_transfer, candidate_strength, turnout_prior)
         full = scenarios[scenarios["scenario"] == "full_model_mid_turnout"].iloc[0]
         rows.append(
             {
@@ -860,7 +990,7 @@ def build_sensitivity(
     non_partisan = polls[
         ~((polls["model_group"] == "core") & polls["partisan_or_internal"].map(to_bool))
     ]
-    scenarios, _ = build_scenarios(non_partisan, primary, finance_ads, hunt_transfer, candidate_strength)
+    scenarios, _ = build_scenarios(non_partisan, primary, finance_ads, hunt_transfer, candidate_strength, turnout_prior)
     full = scenarios[scenarios["scenario"] == "full_model_mid_turnout"].iloc[0]
     rows.append(
         {
@@ -1149,6 +1279,7 @@ def build_source_manifest(raw: Dict[str, pd.DataFrame]) -> pd.DataFrame:
                         "timestamp",
                         "election_date",
                         "report_date",
+                        "check_date",
                     ],
                 ),
             }
@@ -1175,6 +1306,9 @@ def build_data_quality_report(
         latest = latest_date_value(frame, date_columns)
         latest_ts = pd.Timestamp(latest) if latest else pd.NaT
         days_stale = int((AS_OF - latest_ts).days) if pd.notna(latest_ts) else None
+        source_dataset = "market_timeseries" if name == "market_prices" else "early_vote_turnout" if name == "early_vote" else name
+        latest_check_date, days_since_check, check_result = source_check_freshness(raw, source_dataset)
+        check_fresh = bool(days_since_check is not None and days_since_check <= 7)
         note_column = "notes" if "notes" in frame.columns else "model_note" if "model_note" in frame.columns else None
         missing_notes = int(frame[note_column].fillna("").astype(str).str.strip().eq("").sum()) if note_column else len(frame)
         missing_sources = (
@@ -1188,12 +1322,17 @@ def build_data_quality_report(
             stale_flag = bool(required_for_publish and not processed["early_vote_turnout"]["available_for_model"].any())
         else:
             stale_flag = bool(days_stale is not None and days_stale > 21)
+        if stale_flag and check_fresh and check_result in {"no_new_public_update", "not_started", "checked_current"}:
+            stale_flag = False
         rows.append(
             {
                 "signal_group": name,
                 "row_count": int(len(frame)),
                 "latest_source_date": latest,
                 "days_stale": days_stale,
+                "latest_source_check_date": latest_check_date,
+                "days_since_source_check": days_since_check,
+                "source_check_result": check_result,
                 "missing_source_count": missing_sources,
                 "missing_notes_count": missing_notes,
                 "stale_flag": stale_flag,
@@ -1226,6 +1365,7 @@ def build_source_registry_status(
         "county_primary_results": ["election_date"],
         "county_features": [],
         "early_vote_turnout": ["report_date"],
+        "source_checks": ["check_date"],
         "wager_settings": [],
     }
     for _, row in registry.iterrows():
@@ -1234,8 +1374,17 @@ def build_source_registry_status(
         latest = latest_date_value(frame, date_columns.get(dataset_name, []))
         latest_ts = pd.Timestamp(latest) if latest else pd.NaT
         days_stale = int((AS_OF - latest_ts).days) if pd.notna(latest_ts) else None
+        latest_check_date, days_since_check, check_result = source_check_freshness(raw, dataset_name)
         freshness_sla_days = int(row["freshness_sla_days"])
-        freshness_pass = bool(days_stale is None or days_stale <= freshness_sla_days)
+        data_fresh = bool(days_stale is None or days_stale <= freshness_sla_days)
+        check_fresh = bool(days_since_check is not None and days_since_check <= freshness_sla_days)
+        freshness_pass = bool(data_fresh or check_fresh)
+        if check_fresh and (pd.isna(latest_ts) or not data_fresh):
+            freshness_basis = "source_check"
+        elif data_fresh:
+            freshness_basis = "latest_source_data"
+        else:
+            freshness_basis = "stale"
         parse_status = "ok" if len(frame) > 0 else "empty"
         rows.append(
             {
@@ -1246,6 +1395,10 @@ def build_source_registry_status(
                 "freshness_sla_days": freshness_sla_days,
                 "latest_source_date": latest,
                 "days_stale": days_stale,
+                "latest_source_check_date": latest_check_date,
+                "days_since_source_check": days_since_check,
+                "source_check_result": check_result,
+                "freshness_basis": freshness_basis,
                 "freshness_pass": freshness_pass,
                 "parse_status": parse_status,
                 "row_count": int(len(frame)),
@@ -1265,6 +1418,7 @@ def build_release_status(
     source_registry_status: pd.DataFrame,
 ) -> pd.DataFrame:
     blocking_issues = []
+    reliability_penalties = []
 
     required_quality = data_quality_report[data_quality_report["required_for_publish"]]
     for _, row in required_quality.iterrows():
@@ -1272,8 +1426,13 @@ def build_release_status(
             blocking_issues.append(f"{row['signal_group']}_quality_gate_failed")
 
     calibration_failures = calibration_summary[~calibration_summary["pass"]]
+    calibration_block_metrics = {"effective_poll_count", "forecast_interval_width", "pollster_sensitivity_max_shift"}
     for _, row in calibration_failures.iterrows():
-        blocking_issues.append(f"calibration:{row['metric']}:{row['status']}")
+        issue = f"calibration:{row['metric']}:{row['status']}"
+        if row["metric"] in calibration_block_metrics:
+            blocking_issues.append(issue)
+        else:
+            reliability_penalties.append(issue)
 
     county_row = county_model_status.iloc[0]
     if not bool(county_row["county_forecast_eligible"]):
@@ -1293,6 +1452,7 @@ def build_release_status(
     interval_width = float(full["margin_80pct_high"] - full["margin_80pct_low"])
     reliability_score = 100.0
     reliability_score -= 18.0 * len(set(blocking_issues))
+    reliability_score -= 6.0 * len(set(reliability_penalties))
     reliability_score -= min(20.0, max(0.0, interval_width - 20.0))
     reliability_score = max(0.0, min(100.0, reliability_score))
     if reliability_score >= 80:
@@ -1316,6 +1476,7 @@ def build_release_status(
             "reliability_class": reliability_class,
             "blocking_issue_count": len(set(blocking_issues)),
             "blocking_issues": ";".join(sorted(set(blocking_issues))) if blocking_issues else "",
+            "reliability_penalties": ";".join(sorted(set(reliability_penalties))) if reliability_penalties else "",
             "county_forecast_eligible": bool(county_row["county_forecast_eligible"]),
             "county_detail_available": bool(county_row["county_detail_available"]),
             "candidate_vote_coverage_pct": float(county_row["candidate_vote_coverage_pct"]),
@@ -1524,9 +1685,21 @@ def build_forecast_package(
     blocking_issues = str(release["blocking_issues"]).split(";") if str(release["blocking_issues"]).strip() else []
     blocking_issues = [issue for issue in blocking_issues if issue]
 
-    calibration_ready = calibration_summary["pass"].all()
+    current_gate_metrics = {"effective_poll_count", "forecast_interval_width", "pollster_sensitivity_max_shift"}
+    calibration_ready = calibration_summary[
+        calibration_summary["metric"].isin(current_gate_metrics)
+    ]["pass"].all()
     source_freshness = source_registry_status[
-        ["dataset_name", "freshness_pass", "days_stale", "latest_source_date", "trust_tier"]
+        [
+            "dataset_name",
+            "freshness_pass",
+            "freshness_basis",
+            "days_stale",
+            "latest_source_date",
+            "latest_source_check_date",
+            "source_check_result",
+            "trust_tier",
+        ]
     ].to_dict("records")
     scenario_summary = []
     for _, row in scenario_df.iterrows():
@@ -1548,6 +1721,9 @@ def build_forecast_package(
             "forecast_publishable": bool(release["forecast_publishable"]),
             "betting_eligible": bool(release["betting_eligible"]),
             "blocking_issues": blocking_issues,
+            "reliability_penalties": str(release.get("reliability_penalties", "")).split(";")
+            if str(release.get("reliability_penalties", "")).strip()
+            else [],
         },
         "headline_forecast": {
             "paxton_fair_probability": float(full["paxton_win_probability"]),
@@ -1572,6 +1748,12 @@ def build_forecast_package(
         "source_freshness": source_freshness,
         "blocking_issues": blocking_issues,
         "scenario_summary": scenario_summary,
+        "scenario_range": {
+            "paxton_probability_low": float(scenario_df["paxton_win_probability"].min()),
+            "paxton_probability_high": float(scenario_df["paxton_win_probability"].max()),
+            "margin_low": float(scenario_df["mean_paxton_margin_points"].min()),
+            "margin_high": float(scenario_df["mean_paxton_margin_points"].max()),
+        },
         "betting_decision_summary": {
             "eligible_market_count": int(len(eligible_rows)),
             "no_bet_default": True,
@@ -1602,13 +1784,15 @@ def build_audit_report(
     headline = forecast_package["headline_forecast"]
     uncertainty = forecast_package["uncertainty"]
     blocked = forecast_package["blocking_issues"]
-    blocked_text = "\n".join(f"- {issue}" for issue in blocked) if blocked else "- none"
+    blocked_text = "\n        ".join(f"- {issue}" for issue in blocked) if blocked else "- none"
+    penalties = forecast_package["release_status"].get("reliability_penalties", [])
+    penalty_text = "\n        ".join(f"- {issue}" for issue in penalties) if penalties else "- none"
     required_quality = data_quality_report[data_quality_report["required_for_publish"]]
-    quality_text = "\n".join(
+    quality_text = "\n        ".join(
         f"- {row.signal_group}: stale={row.stale_flag}, missing_sources={row.missing_source_count}, missing_notes={row.missing_notes_count}"
         for row in required_quality.itertuples()
     )
-    wager_text = "\n".join(
+    wager_text = "\n        ".join(
         f"- {row.platform}: {row.value_flag} ({row.block_reasons or 'no block reasons'})"
         for row in wager_value_table.itertuples()
     )
@@ -1635,6 +1819,16 @@ def build_audit_report(
 
         {blocked_text}
 
+        ## Reliability Penalties
+
+        {penalty_text}
+
+        These reduce confidence but do not automatically withhold the forecast unless a current data gate fails.
+
+        ## Model Story
+
+        The headline is a probabilistic forecast, not a guaranteed call. It blends clustered direct runoff polling, the first-round result, Hunt-voter transfer evidence, bounded candidate-strength signals, and a capped Cornyn money/media adjustment. Markets are used only as an external price check and never as a core model input.
+
         ## Required Data Quality Gates
 
         {quality_text}
@@ -1646,12 +1840,85 @@ def build_audit_report(
     ).strip() + "\n"
 
 
+def build_model_card(
+    forecast_package: Dict[str, object],
+    scenario_df: pd.DataFrame,
+    turnout_prior: pd.DataFrame,
+    hunt_transfer_scenarios: pd.DataFrame,
+    poll_diagnostics: pd.DataFrame,
+) -> str:
+    headline = forecast_package["headline_forecast"]
+    uncertainty = forecast_package["uncertainty"]
+    diagnostics = forecast_package["diagnostics"]
+    scenarios = "\n        ".join(
+        f"- {row.scenario}: Paxton {row.paxton_win_probability:.1%}, mean margin {row.mean_paxton_margin_points:.1f} points."
+        for row in scenario_df.itertuples()
+    )
+    turnout = "\n        ".join(
+        f"- {row.scenario}: {row.projected_runoff_votes:,.0f} projected voters, "
+        f"{row.paxton_margin_adjustment_points:+.2f} Paxton margin points."
+        for row in turnout_prior.itertuples()
+    )
+    hunt = "\n        ".join(
+        f"- {row.scenario}: {row.paxton_transfer_share:.1%} Hunt-to-Paxton transfer, "
+        f"prior margin {row.primary_transfer_prior_margin_points:+.1f}."
+        for row in hunt_transfer_scenarios.itertuples()
+    )
+    clustered = poll_diagnostics.loc[
+        poll_diagnostics["diagnostic"].eq("clustered_internal_core_poll_count"), "value"
+    ]
+    clustered_count = float(clustered.iloc[0]) if not clustered.empty else 0.0
+    return textwrap.dedent(
+        f"""
+        # Model Card
+
+        ## Intended Use
+
+        This package estimates the May 26, 2026 Texas Republican U.S. Senate runoff as a probabilistic research forecast. It is intended for election-analysis review and showcase presentation, not as a guarantee or financial advice.
+
+        ## Headline
+
+        - As of: `{forecast_package['as_of']}`
+        - Paxton fair probability: `{headline['paxton_fair_probability']:.1%}`
+        - Cornyn fair probability: `{headline['cornyn_fair_probability']:.1%}`
+        - Mean Paxton margin: `{headline['mean_paxton_margin_points']:+.2f}` points
+        - 80% interval: `{uncertainty['margin_80pct_interval'][0]:+.2f}` to `{uncertainty['margin_80pct_interval'][1]:+.2f}` points
+        - Release status: `{forecast_package['release_status']['state']}`
+
+        ## Inputs And Adjustments
+
+        - Polling baseline: direct runoff polls weighted by recency, sample size, likely-voter population, partisan/internal status, and same-day internal clustering. Clustered internal poll groups: `{clustered_count:.0f}`.
+        - Primary prior: first-round votes plus Hunt-voter transfer evidence. Baseline transfer prior margin: `{diagnostics['primary_transfer_prior_margin_points']:+.2f}` points.
+        - Candidate strength: capped favorability and supporter-commitment adjustment of `{diagnostics['candidate_strength_margin_adjustment']:+.2f}` margin points.
+        - Money/media: capped cash and ad-spending adjustment of `{diagnostics['money_media_margin_adjustment']:+.2f}` margin points.
+        - Uncertainty: base sigma `{diagnostics['base_sigma_points']:.2f}` points with scenario-specific widening.
+
+        ## Scenario Outputs
+
+        {scenarios}
+
+        ## Turnout Prior
+
+        {turnout}
+
+        ## Hunt Transfer Stress
+
+        {hunt}
+
+        ## Known Limits
+
+        County-level candidate rows remain a release gate until a complete, reconciled county file replaces the statewide placeholder. Historical calibration history is tracked as a reliability penalty rather than a hard publication blocker when current source, duplicate, and quality gates pass.
+        """
+    ).strip() + "\n"
+
+
 def write_outputs(
     raw: Dict[str, pd.DataFrame],
     frames: Dict[str, pd.DataFrame],
     scenario_df: pd.DataFrame,
     forecast_package: Dict[str, object],
     audit_report: str,
+    model_card: str,
     run_id: str,
 ) -> None:
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
@@ -1660,11 +1927,13 @@ def write_outputs(
     add_last_updated(scenario_df).to_csv(PROCESSED_DIR / "model_scenarios.csv", index=False)
     (PROCESSED_DIR / "model_output.json").write_text(json.dumps(forecast_package, indent=2), encoding="utf-8")
     (PROCESSED_DIR / "audit_report.md").write_text(audit_report, encoding="utf-8")
+    (PROCESSED_DIR / "model_card.md").write_text(model_card, encoding="utf-8")
     snapshot_manifest = snapshot_raw_inputs(run_id)
     add_last_updated(snapshot_manifest).to_csv(PROCESSED_DIR / "snapshot_manifest.csv", index=False)
 
 
-def main() -> Dict[str, object]:
+def main(as_of: object | None = None) -> Dict[str, object]:
+    configure_run(as_of)
     raw = read_raw()
     validate_source_registry(raw)
     validate_source_metadata(raw)
@@ -1673,8 +1942,8 @@ def main() -> Dict[str, object]:
     validate_hunt_transfer(raw["hunt_transfer"])
     validate_county_primary_results(raw["county_primary_results"], raw["primary_results"])
 
-    polls = process_polls(raw["polls"])
-    hunt_transfer = process_hunt_transfer(raw["hunt_transfer"])
+    polls = process_polls(raw["polls"], AS_OF)
+    hunt_transfer = process_hunt_transfer(raw["hunt_transfer"], AS_OF)
     primary = raw["primary_results"].copy()
     markets = raw["markets"].copy()
     market_timeseries = process_market_timeseries(raw["market_timeseries"])
@@ -1689,9 +1958,19 @@ def main() -> Dict[str, object]:
     county_features = raw["county_features"].copy()
     county_primary_results = raw["county_primary_results"].copy()
     early_vote_turnout = process_early_vote_turnout(raw["early_vote_turnout"])
+    source_checks = raw["source_checks"].copy()
 
-    scenario_df, diagnostics = build_scenarios(polls, primary, finance_ads, hunt_transfer, candidate_strength)
-    sensitivity = build_sensitivity(polls, primary, finance_ads, hunt_transfer, candidate_strength)
+    turnout_prior = build_turnout_prior(turnout_signals, primary)
+    hunt_transfer_scenarios = build_hunt_transfer_scenarios(primary, hunt_transfer)
+    scenario_df, diagnostics = build_scenarios(
+        polls,
+        primary,
+        finance_ads,
+        hunt_transfer,
+        candidate_strength,
+        turnout_prior,
+    )
+    sensitivity = build_sensitivity(polls, primary, finance_ads, hunt_transfer, candidate_strength, turnout_prior)
     market_comparison = build_market_comparison(markets, scenario_df)
     poll_diagnostics = build_poll_diagnostics(polls)
     poll_miss_diagnostics = build_poll_miss_diagnostics(polls, primary)
@@ -1763,6 +2042,9 @@ def main() -> Dict[str, object]:
         "county_primary_results": county_primary_results,
         "county_features": county_features,
         "early_vote_turnout": early_vote_turnout,
+        "source_checks": source_checks,
+        "turnout_prior": turnout_prior,
+        "hunt_transfer_scenarios": hunt_transfer_scenarios,
         "sensitivity": sensitivity,
         "market_comparison": market_comparison,
         "poll_diagnostics": poll_diagnostics,
@@ -1799,7 +2081,14 @@ def main() -> Dict[str, object]:
         data_quality_report,
         wager_value_table,
     )
-    write_outputs(raw, processed, scenario_df, forecast_package, audit_report, run_id)
+    model_card = build_model_card(
+        forecast_package,
+        scenario_df,
+        turnout_prior,
+        hunt_transfer_scenarios,
+        poll_diagnostics,
+    )
+    write_outputs(raw, processed, scenario_df, forecast_package, audit_report, model_card, run_id)
 
     full = scenario_df[scenario_df["scenario"] == "full_model_mid_turnout"].iloc[0]
     print(
@@ -1817,10 +2106,13 @@ def main() -> Dict[str, object]:
         "data_quality_report": data_quality_report,
         "release_status": release_status,
         "forecast_package": forecast_package,
+        "turnout_prior": turnout_prior,
+        "hunt_transfer_scenarios": hunt_transfer_scenarios,
     }
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build the Texas GOP Senate runoff analysis dataset and model.")
-    parser.parse_args()
-    main()
+    parser.add_argument("--as-of", default=str(DEFAULT_AS_OF.date()), help="Forecast as-of date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+    main(as_of=args.as_of)

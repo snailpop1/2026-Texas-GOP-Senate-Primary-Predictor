@@ -1,7 +1,7 @@
 scenario,paxton_win_probability,cornyn_win_probability,mean_paxton_margin_points,margin_80pct_low,margin_80pct_high,sigma_margin_points,note,last_updated
-polling_only,0.72227,0.27773000000000003,5.442641405508272,-6.372737816730356,17.29246152860792,9.236533495025295,Only post-primary direct runoff polls.,2026-05-09
-polling_plus_primary,0.6984,0.3016,4.521755410192041,-6.708687197672096,15.692587291357682,8.736533495025295,Runoff polls blended with first-round result plus Hunt transfer evidence.,2026-05-09
-full_model_mid_turnout,0.616375,0.383625,2.5803055670379274,-8.669261604617912,13.762226479438642,8.736533495025295,"Core estimate: polls, primary prior, Paxton enthusiasm, and Cornyn money/media edge.",2026-05-09
-low_turnout,0.658355,0.341645,3.8303055670379274,-8.262601349449623,15.939704342135588,9.486533495025295,Lower-turnout runoff scenario; assumes more ideologically intense electorate.,2026-05-09
-high_turnout,0.557135,0.44286499999999995,1.3303055670379274,-10.73948829410537,13.491375768542989,9.486533495025295,Higher-turnout runoff scenario; assumes Cornyn reaches more infrequent/moderate GOP voters.,2026-05-09
-repeat_primary_poll_error,0.443495,0.556505,-1.385443584094785,-13.888408124328876,11.054721503137294,9.736533495025295,Stress test only: applies half of the March primary polling-margin miss toward Cornyn.,2026-05-09
+polling_only,0.716995,0.28300499999999995,5.216392022924486,-6.391943829025921,16.798315348982417,9.033026581492319,Only post-primary direct runoff polls.,2026-05-12
+polling_plus_primary,0.690915,0.30908500000000005,4.289389513993275,-6.7019422368212505,15.26145506532152,8.533026581492319,Runoff polls blended with first-round result plus Hunt transfer evidence.,2026-05-12
+full_model_mid_turnout,0.60785,0.39215,2.3404345948287006,-8.613448411168886,13.302594105605912,8.533026581492319,"Core estimate: polls, primary prior, Paxton enthusiasm, and Cornyn money/media edge.",2026-05-12
+low_turnout,0.649925,0.350075,3.5904345948287006,-8.29862985982491,15.510409208757403,9.283026581492319,"Lower-turnout runoff scenario; about 758,418 projected voters.",2026-05-12
+high_turnout,0.5452,0.4548,1.0904345948287006,-10.854961013931186,13.027404643964411,9.283026581492319,"Higher-turnout runoff scenario; about 1,408,492 projected voters.",2026-05-12
+repeat_primary_poll_error,0.424865,0.575135,-1.808013213578945,-13.983100366429959,10.38455087403625,9.533026581492319,Stress test only: applies half of the March primary polling-margin miss toward Cornyn.,2026-05-12

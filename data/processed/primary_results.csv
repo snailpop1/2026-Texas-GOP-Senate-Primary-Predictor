@@ -1,9 +1,9 @@
 source,candidate,party,votes,pct,statewide_or_county,county,early_votes,election_day_votes,absentee_votes,source_url,notes,last_updated
-AP/TexPolls,John Cornyn,Republican,907416,41.9,statewide,,,,,https://texpolls.com/races/us-senate-2026,Advanced to runoff.,2026-05-09
-AP/TexPolls,Ken Paxton,Republican,881192,40.7,statewide,,,,,https://texpolls.com/races/us-senate-2026,Advanced to runoff.,2026-05-09
-AP/TexPolls,Wesley Hunt,Republican,292702,13.5,statewide,,,,,https://texpolls.com/races/us-senate-2026,Eliminated; voter transfer is a key runoff uncertainty.,2026-05-09
-AP/TexPolls,Sara Canady,Republican,26355,1.2,statewide,,,,,https://texpolls.com/races/us-senate-2026,Eliminated.,2026-05-09
-AP/TexPolls,Anna Bender,Republican,24167,1.1,statewide,,,,,https://texpolls.com/races/us-senate-2026,Eliminated.,2026-05-09
-AP/TexPolls,"Gulrez ""Gus"" Khan",Republican,15873,0.7,statewide,,,,,https://texpolls.com/races/us-senate-2026,Eliminated.,2026-05-09
-AP/TexPolls,John O. Adefope,Republican,9284,0.4,statewide,,,,,https://texpolls.com/races/us-senate-2026,Eliminated.,2026-05-09
-AP/TexPolls,Virgil John Bierschwale,Republican,9035,0.4,statewide,,,,,https://texpolls.com/races/us-senate-2026,Eliminated.,2026-05-09
+TXElectionResults/SOS candidate feed,John Cornyn,Republican,910382,42.0,statewide,,,,,https://txelectionresults.com/primaries/2026,Advanced to runoff; statewide total reconciles to TXElectionResults GOP ballot total.,2026-05-12
+TXElectionResults/SOS candidate feed,Ken Paxton,Republican,878564,40.5,statewide,,,,,https://txelectionresults.com/primaries/2026,Advanced to runoff; statewide total reconciles to TXElectionResults GOP ballot total.,2026-05-12
+TXElectionResults/SOS candidate feed,Wesley Hunt,Republican,293250,13.5,statewide,,,,,https://txelectionresults.com/primaries/2026,Eliminated; voter transfer is a key runoff uncertainty.,2026-05-12
+TXElectionResults/SOS candidate feed,Sara Canady,Republican,26355,1.2,statewide,,,,,https://txelectionresults.com/primaries/2026,Eliminated.,2026-05-12
+TXElectionResults/SOS candidate feed,Anna Bender,Republican,24167,1.1,statewide,,,,,https://txelectionresults.com/primaries/2026,Eliminated.,2026-05-12
+TXElectionResults/SOS candidate feed,"Gulrez ""Gus"" Khan",Republican,15873,0.7,statewide,,,,,https://txelectionresults.com/primaries/2026,Eliminated.,2026-05-12
+TXElectionResults/SOS candidate feed,John O. Adefope,Republican,9284,0.4,statewide,,,,,https://txelectionresults.com/primaries/2026,Eliminated.,2026-05-12
+TXElectionResults/SOS candidate feed,Virgil John Bierschwale,Republican,9035,0.4,statewide,,,,,https://txelectionresults.com/primaries/2026,Eliminated.,2026-05-12
