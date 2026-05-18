@@ -1,9 +1,9 @@
 metric,value,threshold,pass,status,notes,last_updated
-effective_poll_count,7.563733322549962,>= 6.0,True,ready,Minimum effective poll count for a publishable forecast.,2026-05-09
-forecast_interval_width,22.431488084056554,<= 24.0,True,ready,Wide intervals imply lower reliability and can block publication.,2026-05-09
-pollster_sensitivity_max_shift,0.05798000000000003,<= 0.10,True,ready,Probability should not swing too sharply when one pollster is removed.,2026-05-09
-primary_poll_margin_abs_error,7.931498302265425,<= 6.0,False,fail,Historical analog error proxy from the March primary polling miss.,2026-05-09
-historical_brier_score,,historical benchmark required,False,insufficient_history,Not enough comparable historical forecast runs are stored in-repo.,2026-05-09
-historical_log_loss,,historical benchmark required,False,insufficient_history,Not enough comparable historical forecast runs are stored in-repo.,2026-05-09
-historical_calibration_error,,historical benchmark required,False,insufficient_history,Not enough comparable historical forecast runs are stored in-repo.,2026-05-09
-historical_interval_coverage,,historical benchmark required,False,insufficient_history,Not enough comparable historical forecast runs are stored in-repo.,2026-05-09
+effective_poll_count,7.5637333225499574,>= 6.0,True,ready,Minimum effective poll count for a publishable forecast.,2026-05-18
+forecast_interval_width,22.36567967015355,<= 24.0,True,ready,Wide intervals imply lower reliability and can block publication.,2026-05-18
+pollster_sensitivity_max_shift,0.05559499999999995,<= 0.10,True,ready,Probability should not swing too sharply when one pollster is removed.,2026-05-18
+primary_poll_margin_abs_error,7.931498302265425,<= 6.0,False,fail,Historical analog error proxy from the March primary polling miss.,2026-05-18
+historical_brier_score,,historical benchmark required,False,insufficient_history,Not enough comparable historical forecast runs are stored in-repo.,2026-05-18
+historical_log_loss,,historical benchmark required,False,insufficient_history,Not enough comparable historical forecast runs are stored in-repo.,2026-05-18
+historical_calibration_error,,historical benchmark required,False,insufficient_history,Not enough comparable historical forecast runs are stored in-repo.,2026-05-18
+historical_interval_coverage,,historical benchmark required,False,insufficient_history,Not enough comparable historical forecast runs are stored in-repo.,2026-05-18

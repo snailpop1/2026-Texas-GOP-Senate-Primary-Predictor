@@ -1,0 +1,5 @@
+source,election_date,county,candidate,party,votes,pct,county_type,region_group,metro_area,data_quality,source_url,notes
+AP/TexPolls,2026-03-03,statewide_unallocated,John Cornyn,Republican,907416,41.9,statewide,statewide,statewide,statewide_placeholder,https://www.texpolls.com/,"Statewide total used until full county-by-county candidate rows are imported."
+AP/TexPolls,2026-03-03,statewide_unallocated,Ken Paxton,Republican,881192,40.7,statewide,statewide,statewide,statewide_placeholder,https://www.texpolls.com/,"Statewide total used until full county-by-county candidate rows are imported."
+AP/TexPolls,2026-03-03,statewide_unallocated,Wesley Hunt,Republican,292702,13.5,statewide,statewide,statewide,statewide_placeholder,https://www.texpolls.com/,"Statewide total used until full county-by-county candidate rows are imported."
+AP/TexPolls,2026-03-03,statewide_unallocated,Minor candidates,Republican,84714,3.9,statewide,statewide,statewide,statewide_placeholder,https://www.texpolls.com/,"Aggregated minor-candidate statewide vote used until full county rows are imported."

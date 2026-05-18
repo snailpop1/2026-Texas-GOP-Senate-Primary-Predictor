@@ -1,10 +1,10 @@
 diagnostic,value,notes,last_updated
-core_poll_count,12.0,Direct runoff polls included in the core polling baseline.,2026-05-09
-effective_poll_count,7.563733322549962,"Weight-adjusted poll count after recency, sample, population, and partisan penalties.",2026-05-09
-weighted_mean_paxton_margin,5.442641405508272,Two-candidate Paxton margin in points.,2026-05-09
-weighted_poll_standard_deviation,5.736533495025294,Weighted spread of core poll margins.,2026-05-09
-weighted_standard_error,2.0858421032339187,Polling-only standard error using effective poll count.,2026-05-09
-moe_derived_standard_error,0.754688775469423,Approximate margin uncertainty derived from reported poll MoE.,2026-05-09
-partisan_internal_weighted_mean_margin,6.937027294770154,Core polling margin using only partisan/internal polls.,2026-05-09
-nonpartisan_weighted_mean_margin,4.2476459415500525,Core polling margin excluding partisan/internal polls.,2026-05-09
-latest_core_poll_release_date,,2026-05-07,2026-05-09
+core_poll_count,12.0,Direct runoff polls included in the core polling baseline.,2026-05-18
+effective_poll_count,7.5637333225499574,"Weight-adjusted poll count after recency, sample, population, and partisan penalties.",2026-05-18
+weighted_mean_paxton_margin,5.442641405508275,Two-candidate Paxton margin in points.,2026-05-18
+weighted_poll_standard_deviation,5.736533495025295,Weighted spread of core poll margins.,2026-05-18
+weighted_standard_error,2.08584210323392,Polling-only standard error using effective poll count.,2026-05-18
+moe_derived_standard_error,0.7546887754694233,Approximate margin uncertainty derived from reported poll MoE.,2026-05-18
+partisan_internal_weighted_mean_margin,6.937027294770155,Core polling margin using only partisan/internal polls.,2026-05-18
+nonpartisan_weighted_mean_margin,4.247645941550054,Core polling margin excluding partisan/internal polls.,2026-05-18
+latest_core_poll_release_date,,2026-05-07,2026-05-18

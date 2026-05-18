@@ -1,9 +1,11 @@
 date,candidate,event_or_endorser,category,source_url,model_note,last_updated
-2026-03-14,Paxton,Rep. Eric Burlison,endorsement,https://texpolls.com/races/us-senate-2026,Right-populist endorsement signal; qualitative only.,2026-05-09
-2026-03-14,Paxton,Rep. Lance Gooden,endorsement,https://texpolls.com/races/us-senate-2026,Texas congressional endorsement; qualitative only.,2026-05-09
-2026-03-14,Paxton,Rep. Troy Nehls,endorsement,https://texpolls.com/races/us-senate-2026,Texas congressional endorsement; qualitative only.,2026-05-09
-2026-03-14,Paxton,Turning Point Action,endorsement,https://texpolls.com/races/us-senate-2026,Youth/MAGA organization; qualitative only.,2026-05-09
-2026-03-14,Cornyn,Senate Majority Leader John Thune,endorsement,https://texpolls.com/races/us-senate-2026,Senate GOP establishment endorsement; qualitative only.,2026-05-09
-2026-03-14,Cornyn,National Border Patrol Council,endorsement,https://texpolls.com/races/us-senate-2026,Issue-group endorsement relevant to GOP border salience; qualitative only.,2026-05-09
-2026-03-28,Paxton,CPAC Texas activist reception,event,https://apnews.com/article/075d6eff33890921319ac73bd853986b,AP reported CPAC activists embraced Paxton as MAGA choice; qualitative enthusiasm signal.,2026-05-09
-2026-05-01,Unknown,Trump endorsement not yet resolved,event,https://www.covers.com/politics/texas-senate-odds,High-impact pending event; not assigned to either candidate until actual endorsement occurs.,2026-05-09
+2026-03-14,Paxton,Rep. Eric Burlison,endorsement,https://texpolls.com/races/us-senate-2026,Right-populist endorsement signal; qualitative only.,2026-05-18
+2026-03-14,Paxton,Rep. Lance Gooden,endorsement,https://texpolls.com/races/us-senate-2026,Texas congressional endorsement; qualitative only.,2026-05-18
+2026-03-14,Paxton,Rep. Troy Nehls,endorsement,https://texpolls.com/races/us-senate-2026,Texas congressional endorsement; qualitative only.,2026-05-18
+2026-03-14,Paxton,Turning Point Action,endorsement,https://texpolls.com/races/us-senate-2026,Youth/MAGA organization; qualitative only.,2026-05-18
+2026-03-14,Cornyn,Senate Majority Leader John Thune,endorsement,https://texpolls.com/races/us-senate-2026,Senate GOP establishment endorsement; qualitative only.,2026-05-18
+2026-03-14,Cornyn,National Border Patrol Council,endorsement,https://texpolls.com/races/us-senate-2026,Issue-group endorsement relevant to GOP border salience; qualitative only.,2026-05-18
+2026-03-28,Paxton,CPAC Texas activist reception,event,https://apnews.com/article/075d6eff33890921319ac73bd853986b,AP reported CPAC activists embraced Paxton as MAGA choice; qualitative enthusiasm signal.,2026-05-18
+2026-05-01,Unknown,Trump endorsement not yet resolved,event,https://www.covers.com/politics/texas-senate-odds,High-impact pending event; not assigned to either candidate until actual endorsement occurs.,2026-05-18
+2026-05-14,Unknown,Trump endorsement still unresolved,event,https://www.texastribune.org/2026/05/05/texas-us-senate-gop-runoff-cornyn-paxton-university-of-houston-poll-attorney-general/,Texas Tribune noted Trump remained out of the runoff as of the May UH poll coverage; qualitative status check only.,2026-05-18
+2026-05-18,Unknown,Trump endorsement still unresolved as early voting begins,event,https://www.covers.com/politics/texas-senate-odds,Covers May 18 odds update says Trump's unresolved endorsement remains a volatility factor; qualitative status check only.,2026-05-18

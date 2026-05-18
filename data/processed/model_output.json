@@ -1,7 +1,7 @@
 {
   "version": "2.0",
-  "as_of": "2026-05-09",
-  "run_id": "txgop-20260509",
+  "as_of": "2026-05-18",
+  "run_id": "txgop-20260518",
   "release_status": {
     "state": "withheld",
     "forecast_publishable": false,
@@ -14,24 +14,23 @@
       "calibration:primary_poll_margin_abs_error:fail",
       "county_coverage_incomplete",
       "county_results_quality_gate_failed",
-      "source_registry_stale:early_vote_turnout",
-      "source_registry_stale:endorsements_events",
-      "source_registry_stale:turnout_signals"
+      "source_registry_stale:hunt_transfer",
+      "source_registry_stale:polls"
     ]
   },
   "headline_forecast": {
-    "paxton_fair_probability": 0.616375,
-    "cornyn_fair_probability": 0.383625,
-    "mean_paxton_margin_points": 2.5803055670379274,
+    "paxton_fair_probability": 0.638745,
+    "cornyn_fair_probability": 0.361255,
+    "mean_paxton_margin_points": 3.1105280841484535,
     "forecast_withheld": true
   },
   "uncertainty": {
     "margin_80pct_interval": [
-      -8.669261604617912,
-      13.762226479438642
+      -8.093231656559693,
+      14.272448013593857
     ],
     "sigma_margin_points": 8.736533495025295,
-    "interval_width_points": 22.431488084056554,
+    "interval_width_points": 22.36567967015355,
     "reliability_class": "low"
   },
   "model_health": {
@@ -44,7 +43,7 @@
   "calibration_metrics": [
     {
       "metric": "effective_poll_count",
-      "value": 7.563733322549962,
+      "value": 7.5637333225499574,
       "threshold": ">= 6.0",
       "pass": true,
       "status": "ready",
@@ -52,7 +51,7 @@
     },
     {
       "metric": "forecast_interval_width",
-      "value": 22.431488084056554,
+      "value": 22.36567967015355,
       "threshold": "<= 24.0",
       "pass": true,
       "status": "ready",
@@ -60,7 +59,7 @@
     },
     {
       "metric": "pollster_sensitivity_max_shift",
-      "value": 0.05798000000000003,
+      "value": 0.05559499999999995,
       "threshold": "<= 0.10",
       "pass": true,
       "status": "ready",
@@ -110,8 +109,8 @@
   "source_freshness": [
     {
       "dataset_name": "polls",
-      "freshness_pass": true,
-      "days_stale": 2.0,
+      "freshness_pass": false,
+      "days_stale": 11.0,
       "latest_source_date": "2026-05-07",
       "trust_tier": "high"
     },
@@ -126,63 +125,63 @@
       "dataset_name": "markets",
       "freshness_pass": true,
       "days_stale": 0.0,
-      "latest_source_date": "2026-05-09",
+      "latest_source_date": "2026-05-18",
       "trust_tier": "medium"
     },
     {
       "dataset_name": "market_timeseries",
       "freshness_pass": true,
       "days_stale": 0.0,
-      "latest_source_date": "2026-05-09",
+      "latest_source_date": "2026-05-18",
       "trust_tier": "medium"
     },
     {
       "dataset_name": "finance_ads",
       "freshness_pass": true,
-      "days_stale": 13.0,
-      "latest_source_date": "2026-04-26",
+      "days_stale": 12.0,
+      "latest_source_date": "2026-05-06",
       "trust_tier": "medium"
     },
     {
       "dataset_name": "endorsements_events",
-      "freshness_pass": false,
-      "days_stale": 8.0,
-      "latest_source_date": "2026-05-01",
+      "freshness_pass": true,
+      "days_stale": 0.0,
+      "latest_source_date": "2026-05-18",
       "trust_tier": "medium"
     },
     {
       "dataset_name": "hunt_transfer",
-      "freshness_pass": true,
-      "days_stale": 4.0,
+      "freshness_pass": false,
+      "days_stale": 13.0,
       "latest_source_date": "2026-05-05",
       "trust_tier": "medium"
     },
     {
       "dataset_name": "subgroup_signals",
       "freshness_pass": true,
-      "days_stale": 4.0,
+      "days_stale": 13.0,
       "latest_source_date": "2026-05-05",
       "trust_tier": "medium"
     },
     {
       "dataset_name": "candidate_strength",
       "freshness_pass": true,
-      "days_stale": 4.0,
+      "days_stale": 13.0,
       "latest_source_date": "2026-05-05",
       "trust_tier": "medium"
     },
     {
       "dataset_name": "turnout_signals",
-      "freshness_pass": false,
-      "days_stale": 12.0,
-      "latest_source_date": "2026-04-27",
+      "freshness_pass": true,
+      "days_stale": 0.0,
+      "latest_source_date": "2026-05-18",
       "trust_tier": "medium"
     },
     {
       "dataset_name": "general_election_polls",
       "freshness_pass": true,
-      "days_stale": 10.0,
-      "latest_source_date": "2026-04-29",
+      "days_stale": 0.0,
+      "latest_source_date": "2026-05-18",
       "trust_tier": "low"
     },
     {
@@ -195,7 +194,7 @@
     {
       "dataset_name": "county_primary_results",
       "freshness_pass": true,
-      "days_stale": 67.0,
+      "days_stale": 76.0,
       "latest_source_date": "2026-03-03",
       "trust_tier": "high"
     },
@@ -208,9 +207,9 @@
     },
     {
       "dataset_name": "early_vote_turnout",
-      "freshness_pass": false,
-      "days_stale": 6.0,
-      "latest_source_date": "2026-05-03",
+      "freshness_pass": true,
+      "days_stale": 0.0,
+      "latest_source_date": "2026-05-18",
       "trust_tier": "high"
     },
     {
@@ -229,46 +228,45 @@
     "calibration:primary_poll_margin_abs_error:fail",
     "county_coverage_incomplete",
     "county_results_quality_gate_failed",
-    "source_registry_stale:early_vote_turnout",
-    "source_registry_stale:endorsements_events",
-    "source_registry_stale:turnout_signals"
+    "source_registry_stale:hunt_transfer",
+    "source_registry_stale:polls"
   ],
   "scenario_summary": [
     {
       "scenario": "polling_only",
-      "paxton_win_probability": 0.72227,
-      "cornyn_win_probability": 0.27773000000000003,
-      "mean_paxton_margin_points": 5.442641405508272
+      "paxton_win_probability": 0.72132,
+      "cornyn_win_probability": 0.27868000000000004,
+      "mean_paxton_margin_points": 5.442641405508275
     },
     {
       "scenario": "polling_plus_primary",
-      "paxton_win_probability": 0.6984,
-      "cornyn_win_probability": 0.3016,
-      "mean_paxton_margin_points": 4.521755410192041
+      "paxton_win_probability": 0.69922,
+      "cornyn_win_probability": 0.30078000000000005,
+      "mean_paxton_margin_points": 4.521755410192044
     },
     {
       "scenario": "full_model_mid_turnout",
-      "paxton_win_probability": 0.616375,
-      "cornyn_win_probability": 0.383625,
-      "mean_paxton_margin_points": 2.5803055670379274
+      "paxton_win_probability": 0.638745,
+      "cornyn_win_probability": 0.361255,
+      "mean_paxton_margin_points": 3.1105280841484535
     },
     {
       "scenario": "low_turnout",
-      "paxton_win_probability": 0.658355,
-      "cornyn_win_probability": 0.341645,
-      "mean_paxton_margin_points": 3.8303055670379274
+      "paxton_win_probability": 0.676485,
+      "cornyn_win_probability": 0.323515,
+      "mean_paxton_margin_points": 4.360528084148454
     },
     {
       "scenario": "high_turnout",
-      "paxton_win_probability": 0.557135,
-      "cornyn_win_probability": 0.44286499999999995,
-      "mean_paxton_margin_points": 1.3303055670379274
+      "paxton_win_probability": 0.577725,
+      "cornyn_win_probability": 0.42227499999999996,
+      "mean_paxton_margin_points": 1.8605280841484535
     },
     {
       "scenario": "repeat_primary_poll_error",
-      "paxton_win_probability": 0.443495,
-      "cornyn_win_probability": 0.556505,
-      "mean_paxton_margin_points": -1.385443584094785
+      "paxton_win_probability": 0.466895,
+      "cornyn_win_probability": 0.5331049999999999,
+      "mean_paxton_margin_points": -0.8552210669842588
     }
   ],
   "betting_decision_summary": {
@@ -277,19 +275,19 @@
     "recommended_markets": []
   },
   "headline": {
-    "as_of": "2026-05-09",
-    "paxton_fair_probability": 0.616375,
-    "cornyn_fair_probability": 0.383625,
-    "mean_paxton_margin_points": 2.5803055670379274,
+    "as_of": "2026-05-18",
+    "paxton_fair_probability": 0.638745,
+    "cornyn_fair_probability": 0.361255,
+    "mean_paxton_margin_points": 3.1105280841484535,
     "margin_80pct_interval": [
-      -8.669261604617912,
-      13.762226479438642
+      -8.093231656559693,
+      14.272448013593857
     ]
   },
   "diagnostics": {
-    "as_of": "2026-05-09",
-    "weighted_poll_margin_points": 5.442641405508272,
-    "weighted_poll_dispersion_points": 5.736533495025294,
+    "as_of": "2026-05-18",
+    "weighted_poll_margin_points": 5.442641405508275,
+    "weighted_poll_dispersion_points": 5.736533495025295,
     "primary_transfer_prior_margin_points": 1.2567959722526751,
     "top_two_primary_margin_points": -1.4661681039109737,
     "repeat_primary_poll_error_margin_adjustment": -3.9657491511327123,
@@ -306,12 +304,12 @@
     "cornyn_cash_m": 13.049999999999999,
     "paxton_cash_m": 3.6,
     "cash_ratio_cornyn_to_paxton": 3.454545454545454,
-    "cornyn_runoff_air_m": 3.395,
-    "paxton_runoff_air_m": 0.022,
-    "money_media_margin_adjustment": -1.8917527095424123,
+    "cornyn_runoff_air_m": 15.9,
+    "paxton_runoff_air_m": 4.6,
+    "money_media_margin_adjustment": -1.3615301924318888,
     "base_sigma_points": 8.736533495025295,
-    "poll_effective_count": 7.563733322549962,
-    "poll_weighted_standard_error": 2.0858421032339187,
+    "poll_effective_count": 7.5637333225499574,
+    "poll_weighted_standard_error": 2.08584210323392,
     "county_detail_available": false,
     "release_status": "withheld",
     "reliability_score": 0.0
@@ -321,19 +319,19 @@
       "signal_group": "polls",
       "stale_flag": false,
       "required_for_publish": true,
-      "days_stale": 2
+      "days_stale": 11
     },
     {
       "signal_group": "county_results",
       "stale_flag": true,
       "required_for_publish": true,
-      "days_stale": 67
+      "days_stale": 76
     },
     {
       "signal_group": "early_vote",
       "stale_flag": false,
-      "required_for_publish": false,
-      "days_stale": 6
+      "required_for_publish": true,
+      "days_stale": 0
     },
     {
       "signal_group": "market_prices",
@@ -345,66 +343,66 @@
       "signal_group": "finance_ads",
       "stale_flag": false,
       "required_for_publish": true,
-      "days_stale": 13
+      "days_stale": 12
     },
     {
       "signal_group": "endorsements_events",
       "stale_flag": false,
       "required_for_publish": true,
-      "days_stale": 8
+      "days_stale": 0
     },
     {
       "signal_group": "turnout_signals",
       "stale_flag": false,
       "required_for_publish": true,
-      "days_stale": 12
+      "days_stale": 0
     },
     {
       "signal_group": "poll_miss",
       "stale_flag": true,
       "required_for_publish": false,
-      "days_stale": 68
+      "days_stale": 77
     }
   ],
   "model_ablation_summary": [
     {
       "ablation_stage": "polling_only_component",
-      "mean_paxton_margin_points": 5.442641405508272,
-      "paxton_win_probability": 0.7324916666666667,
+      "mean_paxton_margin_points": 5.442641405508275,
+      "paxton_win_probability": 0.7321416666666667,
       "delta_vs_previous_probability": NaN,
-      "delta_vs_full_model_probability": 0.11611666666666665,
+      "delta_vs_full_model_probability": 0.09339666666666668,
       "notes": "Polling baseline only."
     },
     {
       "ablation_stage": "plus_primary_transfer_prior",
-      "mean_paxton_margin_points": 4.521755410192041,
-      "paxton_win_probability": 0.6992583333333333,
-      "delta_vs_previous_probability": -0.03323333333333334,
-      "delta_vs_full_model_probability": 0.08288333333333331,
+      "mean_paxton_margin_points": 4.521755410192044,
+      "paxton_win_probability": 0.699375,
+      "delta_vs_previous_probability": -0.03276666666666672,
+      "delta_vs_full_model_probability": 0.06062999999999996,
       "notes": "Adds transfer prior blend."
     },
     {
       "ablation_stage": "plus_top_two_primary_structure",
-      "mean_paxton_margin_points": 3.9983082765803397,
-      "paxton_win_probability": 0.6742166666666667,
-      "delta_vs_previous_probability": -0.02504166666666663,
-      "delta_vs_full_model_probability": 0.05784166666666668,
+      "mean_paxton_margin_points": 3.9983082765803424,
+      "paxton_win_probability": 0.6749583333333333,
+      "delta_vs_previous_probability": -0.024416666666666642,
+      "delta_vs_full_model_probability": 0.03621333333333332,
       "notes": "Adds top-two primary structural prior."
     },
     {
       "ablation_stage": "plus_candidate_strength",
-      "mean_paxton_margin_points": 4.47205827658034,
-      "paxton_win_probability": 0.6944833333333333,
-      "delta_vs_previous_probability": 0.020266666666666655,
-      "delta_vs_full_model_probability": 0.07810833333333334,
+      "mean_paxton_margin_points": 4.472058276580342,
+      "paxton_win_probability": 0.69585,
+      "delta_vs_previous_probability": 0.020891666666666642,
+      "delta_vs_full_model_probability": 0.05710499999999996,
       "notes": "Adds bounded candidate-strength adjustment."
     },
     {
       "ablation_stage": "plus_money_media",
-      "mean_paxton_margin_points": 2.5803055670379274,
-      "paxton_win_probability": 0.6186166666666667,
-      "delta_vs_previous_probability": -0.07586666666666664,
-      "delta_vs_full_model_probability": 0.0022416666666666973,
+      "mean_paxton_margin_points": 3.1105280841484535,
+      "paxton_win_probability": 0.6383583333333334,
+      "delta_vs_previous_probability": -0.05749166666666661,
+      "delta_vs_full_model_probability": -0.0003866666666666463,
       "notes": "Adds bounded money/media adjustment."
     }
   ]

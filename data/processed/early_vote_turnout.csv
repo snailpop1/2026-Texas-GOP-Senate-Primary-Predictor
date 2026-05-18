@@ -1,2 +1,3 @@
 election_date,report_date,county,party,early_in_person_votes,mail_votes,total_early_votes,source_url,notes,days_until_early_vote,available_for_model,data_status,last_updated
-2026-05-26,2026-05-03,statewide,Republican,,,,https://www.sos.state.tx.us/elections/,Early voting has not started; update daily once runoff early vote reports begin.,9,False,not_started,2026-05-09
+2026-05-26,2026-05-14,statewide,Republican,,,,https://www.sos.state.tx.us/elections/,Early voting has not started; update daily once runoff early vote reports begin.,0,True,missing_after_start,2026-05-18
+2026-05-26,2026-05-18,statewide,Republican,,,,https://www.cbsnews.com/texas/news/early-voting-2026-texas-primary-runoff-election-where-to-vote-dallas-county-polling-locations/,Early voting began May 18 and runs through May 22; no statewide day-one turnout total was available in public sources at refresh time.,0,True,missing_after_start,2026-05-18

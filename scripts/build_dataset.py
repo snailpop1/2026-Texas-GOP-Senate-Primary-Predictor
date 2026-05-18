@@ -17,11 +17,11 @@ ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
 SNAPSHOT_DIR = ROOT / "data" / "snapshots"
-AS_OF = pd.Timestamp("2026-05-09")
+AS_OF = pd.Timestamp("2026-05-18")
 RUNOFF_ELECTION_DATE = pd.Timestamp("2026-05-26")
 EARLY_VOTE_START = pd.Timestamp("2026-05-18")
 STALE_MARKET_DAYS = 2
-RNG_SEED = 20260509
+RNG_SEED = 20260518
 FORECAST_PACKAGE_VERSION = "2.0"
 
 
@@ -1163,7 +1163,13 @@ def build_data_quality_report(
     groups = [
         ("polls", raw["polls"], ["release_date", "end_date"], "baseline", True),
         ("county_results", raw["county_primary_results"], ["election_date"], "projection_input", True),
-        ("early_vote", processed["early_vote_turnout"], ["report_date"], "inactive_until_early_vote", AS_OF >= EARLY_VOTE_START),
+        (
+            "early_vote",
+            processed["early_vote_turnout"],
+            ["report_date"],
+            "awaiting_reported_totals" if AS_OF >= EARLY_VOTE_START else "inactive_until_early_vote",
+            AS_OF >= EARLY_VOTE_START,
+        ),
         ("market_prices", processed["market_timeseries"], ["timestamp"], "external_price_check", True),
         ("finance_ads", raw["finance_ads"], ["date_end", "date_start"], "baseline_adjustment", True),
         ("endorsements_events", raw["endorsements_events"], ["date"], "qualitative_shock_tracking", True),

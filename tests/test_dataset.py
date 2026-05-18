@@ -239,12 +239,12 @@ def test_poll_miss_and_early_vote_layers_are_explicit() -> None:
     assert poll_miss["repeat_miss_paxton_margin_adjustment"].iloc[0] < 0
 
     early_vote = pd.read_csv(PROCESSED_DIR / "early_vote_turnout.csv")
-    assert set(early_vote["data_status"]) == {"not_started"}
-    assert not early_vote["available_for_model"].any()
+    assert set(early_vote["data_status"]) == {"missing_after_start"}
+    assert early_vote["available_for_model"].all()
 
     projection = pd.read_csv(PROCESSED_DIR / "runoff_county_projection.csv")
     assert set(projection["scenario"]) == {"low", "mid", "high"}
-    assert not projection["early_vote_available"].any()
+    assert projection["early_vote_available"].all()
 
 
 if __name__ == "__main__":
